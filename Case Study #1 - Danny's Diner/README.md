@@ -26,7 +26,9 @@ Danny wants to use the data to answer a few simple questions about his customers
 ### 📌 1. What is the total amount each customer spent at the restaurant?
 
 ````sql
-SELECT customer_id, SUM(price) AS total_spent
+SELECT
+  customer_id,
+  SUM(price) AS total_spent
 FROM dannys_diner.sales
     NATURAL JOIN dannys_diner.menu
 GROUP BY customer_id
@@ -54,7 +56,11 @@ ORDER BY total DESC
 ### 📌 2. How many days has each customer visited the restaurant?
 
 ````sql
-
+SELECT
+  customer_id,
+  COUNT(DISTINCT order_date) AS days_visited
+FROM dannys_diner.sales
+GROUP BY customer_id
 ````
 
 #### Steps:
@@ -62,11 +68,11 @@ ORDER BY total DESC
 - It's important to apply the **DISTINCT** keyword while calculating the visit count to avoid duplicate counting of days. For instance, if Customer A visited the restaurant twice on '2021–01–07', counting without **DISTINCT** would result in 2 days instead of the accurate count of 1 day.
 
 #### Answer:
-| customer_id | visit_count |
-| ----------- | ----------- |
-| A           | 4          |
-| B           | 6          |
-| C           | 2          |
+| customer_id | days_visited |
+| ----------- | -----------  |
+| A           | 4            |
+| B           | 6            |
+| C           | 2            |
 
 - Customer A visited 4 times.
 - Customer B visited 6 times.
