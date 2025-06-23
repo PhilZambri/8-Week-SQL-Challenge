@@ -32,7 +32,7 @@ SELECT
 FROM dannys_diner.sales
     NATURAL JOIN dannys_diner.menu
 GROUP BY customer_id
-ORDER BY total DESC
+ORDER BY total DESC;
 ````
 
 #### Steps:
@@ -60,7 +60,7 @@ SELECT
   customer_id,
   COUNT(DISTINCT order_date) AS days_visited
 FROM dannys_diner.sales
-GROUP BY customer_id
+GROUP BY customer_id;
 ````
 
 #### Steps:
@@ -83,48 +83,48 @@ GROUP BY customer_id
 ### 📌 3. What was the first item from the menu purchased by each customer?
 
 ````sql
-
+SELECT
+    DISTINCT customer_id,
+    FIRST_VALUE(product_name) OVER(PARTITION BY customer_id ORDER BY order_date) AS first_order
+FROM dannys_diner.sales
+    NATURAL JOIN dannys_diner.menu
+ORDER BY customer_id;
 ````
 
-#### Steps:
-- Create a Common Table Expression (CTE) named `ordered_sales_cte`. Within the CTE, create a new column `rank` and calculate the row number using **DENSE_RANK()** window function. The **PARTITION BY** clause divides the data by `customer_id`, and the **ORDER BY** clause orders the rows within each partition by `order_date`.
-- In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, which represents the first row within each `customer_id` partition.
-- Use the GROUP BY clause to group the result by `customer_id` and `product_name`.
-
 #### Answer:
-| customer_id | product_name | 
+| customer_id | first_order | 
 | ----------- | ----------- |
-| A           | curry        | 
-| A           | sushi        | 
+| A           | curry        |
 | B           | curry        | 
 | C           | ramen        |
 
-- Customer A placed an order for both curry and sushi simultaneously, making them the first items in the order.
+- Customer A's first order is curry.
 - Customer B's first order is curry.
 - Customer C's first order is ramen.
-
-I have received feedback suggesting the use of `ROW_NUMBER()` instead of `DENSE_RANK()` for determining the "first order" in this question. 
-
-However, since the `order_date` does not have a timestamp, it is impossible to determine the exact sequence of items ordered by the customer. 
-
-Therefore, it would be inaccurate to conclude that curry is the customer's first order purely based on the alphabetical order of the product names. For this reason, I maintain my solution of using `DENSE_RANK()` and consider both curry and sushi as Customer A's first order.
 
 ***
 
 ### 📌 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
 ````sql
-
+SELECT 
+    product_name, 
+    COUNT(product_name) AS total_purchased
+FROM dannys_diner.sales
+    NATURAL JOIN dannys_diner.menu
+GROUP BY product_name
+ORDER BY total_purchased DESC
+LIMIT 1;
 ````
 
 #### Steps:
-- Perform a **COUNT** aggregation on the `product_id` column and **ORDER BY** the result in descending order using `most_purchased` field.
+- Perform a **COUNT** aggregation on the `product_name` column and **ORDER BY** the result in descending order using `total_purchased` field.
 - Apply the **LIMIT** 1 clause to filter and retrieve the highest number of purchased items.
 
 #### Answer:
-| most_purchased | product_name | 
+| product_name | total_purchased | 
 | ----------- | ----------- |
-| 8       | ramen |
+| ramen       | 8 |
 
 
 - Most purchased item on the menu is ramen which is 8 times. Yummy!
