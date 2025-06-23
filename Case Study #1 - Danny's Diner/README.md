@@ -134,19 +134,35 @@ LIMIT 1;
 ### 📌 5. Which item was the most popular for each customer?
 
 ````sql
+WITH ranked AS (
+    SELECT 
+        customer_id, 
+        product_name, 
+        COUNT(customer_id),
+        DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY COUNT(customer_id) DESC) AS rank
+    FROM dannys_diner.sales
+        NATURAL JOIN dannys_diner.menu
+    GROUP BY customer_id, product_name
+)
 
+SELECT 
+    customer_id, 
+    product_name AS most_ordered, 
+    count AS order_count
+FROM ranked
+WHERE rank = 1;
 ````
 
-*Each user may have more than 1 favourite item.*
+*Each user may have more than 1 most ordered item.*
 
 #### Steps:
-- Create a CTE named `fav_item_cte` and within the CTE, join the `menu` table and `sales` table using the `product_id` column.
+- Create a CTE named `ranked` and within the CTE, join the `menu` table and `sales` table using the `product_id` column.
 - Group results by `sales.customer_id` and `menu.product_name` and calculate the count of `menu.product_id` occurrences for each group. 
 - Utilize the **DENSE_RANK()** window function to calculate the ranking of each `sales.customer_id` partition based on the count of orders **COUNT(`sales.customer_id`)** in descending order.
 - In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, representing the rows with the highest order count for each customer.
 
 #### Answer:
-| customer_id | product_name | order_count |
+| customer_id | most_ordered | order_count |
 | ----------- | ---------- |------------  |
 | A           | ramen        |  3   |
 | B           | sushi        |  2   |
@@ -155,7 +171,7 @@ LIMIT 1;
 | C           | ramen        |  3   |
 
 - Customer A and C's favourite item is ramen.
-- Customer B enjoys all items on the menu. He/she is a true foodie, sounds like me.
+- Customer B enjoys all items on the menu.
 
 ***
 
