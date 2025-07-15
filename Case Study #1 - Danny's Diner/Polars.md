@@ -4,6 +4,7 @@
 ## 📚 Table of Contents
 - [Business Task](#business-task)
 - [Entity Relationship Diagram](#entity-relationship-diagram)
+- [Setup for Polars using pl.read_database_uri()](#setup-for-polars-using-plread_database_uri)
 - [Question and Solution](#question-and-solution)
 
 Please note that all the information regarding the case study has been sourced from the following link: [here](https://8weeksqlchallenge.com/case-study-1/). 
@@ -18,6 +19,29 @@ Danny wants to use the data to answer a few simple questions about his customers
 ## Entity Relationship Diagram
 
 ![image](https://user-images.githubusercontent.com/81607668/127271130-dca9aedd-4ca9-4ed8-b6ec-1e1920dca4a8.png)
+
+***
+## Setup for Polars using pl.read_database_uri()
+Using pl.read_database_uri(), we can query the local postgresql database named '8 WeekSQLChallenge', to extract all three tables - sales, menu, and members - 
+from dannys_diner into three Polars Dataframes. We will use these dataframes to answer all of the following case study questions.
+
+```python
+import polars as pl
+
+uri="postgresql://user:pass@localhost:5432/8%20WeekSQLChallenge"
+
+sales = pl.read_database_uri(
+    query="SELECT * FROM dannys_diner.sales", 
+    uri=uri)
+
+menu = pl.read_database_uri(
+    query="SELECT * FROM dannys_diner.menu", 
+    uri=uri)
+
+members = pl.read_database_uri(
+    query="SELECT * FROM dannys_diner.members", 
+    uri=uri)
+```
 
 ***
 
