@@ -4,6 +4,7 @@
 ## 📚 Table of Contents
 - [Business Task](#business-task)
 - [Entity Relationship Diagram](#entity-relationship-diagram)
+- [Setup for Pandas using sqlalchemy](#setup-for-pandas-using-sqlalchemy)
 - [Question and Solution](#question-and-solution)
 
 Please note that all the information regarding the case study has been sourced from the following link: [here](https://8weeksqlchallenge.com/case-study-1/). 
@@ -18,6 +19,32 @@ Danny wants to use the data to answer a few simple questions about his customers
 ## Entity Relationship Diagram
 
 ![image](https://user-images.githubusercontent.com/81607668/127271130-dca9aedd-4ca9-4ed8-b6ec-1e1920dca4a8.png)
+
+***
+## Setup for Pandas using sqlalchemy
+Using sqlalchemy, we can query the local postgresql database named '8 WeekSQLChallenge', to extract all three tables - sales, menu, and members - 
+from dannys_diner into three Pandas Dataframes. We will use these dataframes to answer all of the following case study questions.
+
+```python
+import pandas as pd
+from sqlalchemy import create_engine
+
+connection_string = f"postgresql+psycopg2://user:pass@localhost:5432/8 WeekSQLChallenge"        
+engine = create_engine(connection_string)
+
+sales = pd.read_sql(
+    sql="SELECT * FROM dannys_diner.sales",
+    con=engine.connect()
+)
+menu = pd.read_sql(
+    sql="SELECT * FROM dannys_diner.menu",
+    con=engine.connect()
+)
+members = pd.read_sql(
+    sql="SELECT * FROM dannys_diner.members",
+    con=engine.connect()
+)
+```
 
 ***
 
