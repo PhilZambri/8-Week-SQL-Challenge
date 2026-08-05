@@ -30,9 +30,9 @@ SELECT
   customer_id,
   SUM(price) AS total_spent
 FROM dannys_diner.sales
-    NATURAL JOIN dannys_diner.menu
+    JOIN dannys_diner.menu USING (product_id)
 GROUP BY customer_id
-ORDER BY total DESC;
+ORDER BY total_spent DESC;
 ````
 
 #### Steps:
