@@ -83,22 +83,41 @@ GROUP BY customer_id;
 ### 📌 3. What was the first item from the menu purchased by each customer?
 
 ````sql
-SELECT
-    DISTINCT customer_id,
-    FIRST_VALUE(product_name) OVER(PARTITION BY customer_id ORDER BY order_date) AS first_order
-FROM dannys_diner.sales
-    NATURAL JOIN dannys_diner.menu
-ORDER BY customer_id;
+WITH ranked_customers AS (
+    SELECT 
+        *,
+        RANK() OVER(PARTITION BY customer_id ORDER BY order_date) AS rank
+    FROM dannys_diner.sales
+    JOIN dannys_diner.menu USING (product_id)
+)
+SELECT DISTINCT customer_id, product_name AS first_purchased_item
+FROM ranked_customers
+WHERE rank = 1;
 ````
 
+````sql
+SELECT DISTINCT
+    customer_id,
+    product_name AS first_purchased_item
+FROM sql_challenge.dannys_diner.sales
+JOIN sql_challenge.dannys_diner.menu USING (product_id)
+QUALIFY RANK() OVER(PARTITION BY customer_id ORDER BY order_date) = 1;
+````
+
+#### Steps:
+- We notice there can be more than one order on the first date that each customer purchased
+- Since there is no finer time detail to determine what was ordered first, we will list all unique menu items purchased on the first day
+- We answer this in two different ways with the same results: 1st with a CTE, and 2nd with QUALIFY. 
+
 #### Answer:
-| customer_id | first_order | 
+| customer_id | first_purchased_item | 
 | ----------- | ----------- |
+| A           | sushi        |
 | A           | curry        |
 | B           | curry        | 
 | C           | ramen        |
 
-- Customer A's first order is curry.
+- Customer A's first order is sushi and curry.
 - Customer B's first order is curry.
 - Customer C's first order is ramen.
 
