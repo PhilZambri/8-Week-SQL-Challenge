@@ -130,7 +130,7 @@ SELECT
     product_name, 
     COUNT(product_name) AS total_purchased
 FROM dannys_diner.sales
-    NATURAL JOIN dannys_diner.menu
+	JOIN dannys_diner.menu USING (product_id)
 GROUP BY product_name
 ORDER BY total_purchased DESC
 LIMIT 1;
@@ -146,7 +146,40 @@ LIMIT 1;
 | ramen       | 8 |
 
 
-- Most purchased item on the menu is ramen which is 8 times. Yummy!
+- Most purchased item on the menu is ramen which is 8 times. Yum!
+
+### 📍 What is the most purchased item on the menu and how many times was it purchased total by all customers and by each customer?
+#### Alternatively, I provide an answer for the same question but a little more involved.
+
+
+````sql
+WITH most_purchased_item AS(
+    SELECT 
+        product_id, 
+        COUNT(product_id) AS total_purchased
+    FROM dannys_diner.sales
+    GROUP BY product_id
+    ORDER BY total_purchased DESC
+    LIMIT 1
+)
+SELECT 
+    COALESCE(customer_id, 'Total') AS customer_id, 
+    product_name, 
+    COUNT(product_name) AS total_purchases
+FROM dannys_diner.sales
+	JOIN dannys_diner.menu USING (product_id)
+WHERE product_id = (SELECT product_id FROM most_purchased_item)
+GROUP BY ROLLUP(customer_id), product_name
+ORDER BY customer_id;
+````
+
+#### Answer:
+| customer_id | product_name | total_purchases | 
+| ----------- | ----------- | --- |
+| A           | ramen        | 3 |
+| B           | ramen        | 2 |
+| C           | ramen        | 3 |
+| Total       | ramen        | 8 |
 
 ***
 
