@@ -190,19 +190,30 @@ WITH ranked AS (
     SELECT 
         customer_id, 
         product_name, 
-        COUNT(customer_id),
-        DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY COUNT(customer_id) DESC) AS rank
+        COUNT(product_name) AS number_of_orders,
+        DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY COUNT(product_name) DESC) AS most_ordered_rank
     FROM dannys_diner.sales
-        NATURAL JOIN dannys_diner.menu
+        JOIN dannys_diner.menu USING (product_id)
     GROUP BY customer_id, product_name
 )
 
 SELECT 
     customer_id, 
-    product_name AS most_ordered, 
-    count AS order_count
+    product_name AS most_ordered_product, 
+    number_of_orders
 FROM ranked
-WHERE rank = 1;
+WHERE most_ordered_rank = 1;
+````
+````sql
+SELECT 
+    customer_id, 
+    product_name, 
+    COUNT(product_name) AS number_of_orders 
+FROM sql_challenge.dannys_diner.sales
+    JOIN sql_challenge.dannys_diner.menu USING (product_id)
+GROUP BY customer_id, product_name
+QUALIFY RANK() OVER(PARTITION BY customer_id ORDER BY number_of_orders DESC) = 1
+ORDER BY customer_id, product_name;
 ````
 
 *Each user may have more than 1 most ordered item.*
@@ -212,6 +223,7 @@ WHERE rank = 1;
 - Group results by `sales.customer_id` and `menu.product_name` and calculate the count of `menu.product_id` occurrences for each group. 
 - Utilize the **DENSE_RANK()** window function to calculate the ranking of each `sales.customer_id` partition based on the count of orders **COUNT(`sales.customer_id`)** in descending order.
 - In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, representing the rows with the highest order count for each customer.
+- Additionally we answer this question another way using QUALIFY
 
 #### Answer:
 | customer_id | most_ordered | order_count |
@@ -223,7 +235,7 @@ WHERE rank = 1;
 | C           | ramen        |  3   |
 
 - Customer A and C's favourite item is ramen.
-- Customer B enjoys all items on the menu.
+- Customer B enjoys all items on the menu equally.
 
 ***
 
