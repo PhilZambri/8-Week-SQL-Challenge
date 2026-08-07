@@ -349,18 +349,27 @@ QUALIFY DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date DESC) = 1
 ### 📌 8. What is the total items and amount spent for each member before they became a member?
 
 ```sql
-
+SELECT 
+    customer_id, 
+    COUNT(product_name) AS total_items, 
+    SUM(price) AS total_spent
+FROM dannys_diner.sales
+    JOIN dannys_diner.members USING (customer_id)
+    JOIN dannys_diner.menu USING (product_ID)
+WHERE order_date < join_date
+GROUP BY customer_id
+ORDER BY customer_id;
 ```
 
 #### Steps:
-- Select the columns `sales.customer_id` and calculate the count of `sales.product_id` as total_items for each customer and the sum of `menu.price` as total_sales.
-- From `dannys_diner.sales` table, join `dannys_diner.members` table on `customer_id` column, ensuring that `sales.order_date` is earlier than `members.join_date` (`sales.order_date < members.join_date`).
-- Then, join `dannys_diner.menu` table to `dannys_diner.sales` table on `product_id` column.
+- Join the tables: `dannys_diner.sales`, `dannys_diner.members`, `dannys_diner.menu`.
+- Filter for where  `sales.order_date < members.join_date`
 - Group the results by `sales.customer_id`.
+- Select `customer_id`, and aggregate using `COUNT(product_name)`, and `SUM(price)`
 - Order the result by `sales.customer_id` in ascending order.
 
 #### Answer:
-| customer_id | total_items | total_sales |
+| customer_id | total_items | total_spent |
 | ----------- | ---------- |----------  |
 | A           | 2 |  25       |
 | B           | 3 |  40       |
