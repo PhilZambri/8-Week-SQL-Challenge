@@ -242,23 +242,54 @@ ORDER BY customer_id, product_name;
 ### 📌 6. Which item was purchased first by the customer after they became a member?
 
 ```sql
-
+WITH rankings AS (
+    SELECT 
+        *,
+        DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date) AS ranked_dates
+    FROM dannys_diner.sales
+        JOIN dannys_diner.members USING (customer_id)
+    WHERE order_date >= join_date
+)
+SELECT 
+    customer_id, 
+    product_name, 
+    order_date, 
+    join_date
+FROM rankings
+    JOIN dannys_diner.menu USING(product_id)
+WHERE ranked_dates = 1
+ORDER BY customer_id;
 ```
 
+````sql
+SELECT 
+    customer_id,
+    product_name,
+    order_date,
+    join_date
+FROM sql_challenge.dannys_diner.sales
+    JOIN sql_challenge.dannys_diner.members USING (customer_id)
+    JOIN sql_challenge.dannys_diner.menu USING (product_ID)
+WHERE order_date >= join_date
+QUALIFY DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date) = 1;
+````
+
 #### Steps:
-- Create a CTE named `joined_as_member` and within the CTE, select the appropriate columns and calculate the row number using the **ROW_NUMBER()** window function. The **PARTITION BY** clause divides the data by `members.customer_id` and the **ORDER BY** clause orders the rows within each `members.customer_id` partition by `sales.order_date`.
-- Join tables `dannys_diner.members` and `dannys_diner.sales` on `customer_id` column. Additionally, apply a condition to only include sales that occurred *after* the member's `join_date` (`sales.order_date > members.join_date`).
+- Create a CTE named `rankings` and within the CTE, select the appropriate columns and calculate the rank using the **DENSE_RANK()** window function. The **PARTITION BY** clause divides the data by `members.customer_id` and the **ORDER BY** clause orders the rows within each `members.customer_id` partition by `sales.order_date`.
+- We are assuming that an order on the same date as `join_date` is considered to be after becoming a member.
+- Join tables `dannys_diner.members` and `dannys_diner.sales` on `customer_id` column. Additionally, apply a condition to only include sales that occurred *after* the member's `join_date` (`sales.order_date >= members.join_date`).
 - In the outer query, join the `joined_as_member` CTE with the `dannys_diner.menu` on the `product_id` column.
 - In the **WHERE** clause, filter to retrieve only the rows where the row_num column equals 1, representing the first row within each `customer_id` partition.
 - Order result by `customer_id` in ascending order.
+- Additionally we answer again using QUALIFY.
 
 #### Answer:
-| customer_id | product_name |
-| ----------- | ---------- |
-| A           | ramen        |
-| B           | sushi        |
+| customer_id | product_name | order_date | join_date |
+| ----------- | ---------- | ----------- | ---------- |
+| A           | curry        | 2021-01-07 | 2021-01-07 |
+| B           | sushi        | 2021-01-11 | 2021-01-09 |
 
-- Customer A's first order as a member is ramen.
+- Customer A's first order as a member is curry.
 - Customer B's first order as a member is sushi.
 
 ***
@@ -266,24 +297,52 @@ ORDER BY customer_id, product_name;
 ### 📌 7. Which item was purchased just before the customer became a member?
 
 ````sql
+WITH rankings AS (
+    SELECT 
+        *,
+        DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date DESC) AS ranked_dates
+    FROM dannys_diner.sales
+        JOIN dannys_diner.members USING (customer_id)
+    WHERE order_date < join_date
+)
+SELECT 
+    customer_id, 
+    product_name, 
+    order_date, 
+    join_date
+FROM rankings
+    JOIN dannys_diner.menu USING(product_id)
+WHERE ranked_dates = 1
+ORDER BY customer_id;
+````
 
+````sql
+SELECT 
+    customer_id,
+    product_name,
+    order_date,
+    join_date
+FROM sql_challenge.dannys_diner.sales
+    JOIN sql_challenge.dannys_diner.members USING (customer_id)
+    JOIN sql_challenge.dannys_diner.menu USING (product_ID)
+WHERE order_date < join_date
+QUALIFY DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date DESC) = 1;
 ````
 
 #### Steps:
-- Create a CTE called `purchased_prior_member`. 
-- In the CTE, select the appropriate columns and calculate the rank using the **ROW_NUMBER()** window function. The rank is determined based on the order dates of the sales in descending order within each customer's group.
-- Join `dannys_diner.members` table with `dannys_diner.sales` table based on the `customer_id` column, only including sales that occurred *before* the customer joined as a member (`sales.order_date < members.join_date`).
-- Join `purchased_prior_member` CTE with `dannys_diner.menu` table based on `product_id` column.
-- Filter the result set to include only the rows where the rank is 1, representing the earliest purchase made by each customer before they became a member.
-- Sort the result by `customer_id` in ascending order.
+- We use the same query from last the last question with two small modifications.
+- Changed `WHERE order_date >= join_date` to `WHERE order_date < join_date`
+- Within the window function we changed `ORDER BY order_date` to `ORDER BY order_date DESC`
 
 #### Answer:
-| customer_id | product_name |
-| ----------- | ---------- |
-| A           | sushi        |
-| B           | sushi        |
+| customer_id | product_name | order_date | join_date |
+| ----------- | ---------- | ----------- | ---------- |
+| A           | sushi        | 2021-01-01 | 2021-01-07 |
+| A           | curry        | 2021-01-01 | 2021-01-07 |
+| B           | sushi        | 2021-01-04 | 2021-01-09 |
 
-- Both customers' last order before becoming members are sushi.
+- Customer A ordered both sushi and curry on the first date before becoming a member.
+- Customer B ordered sushi on the first date before becoming a member.
 
 ***
 
