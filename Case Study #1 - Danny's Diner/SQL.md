@@ -509,8 +509,27 @@ ORDER BY customer_id, order_date;
 **Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.**
 
 ```sql
-
+WITH is_member AS (
+    SELECT 
+        customer_id, order_date, product_name, price,
+        CASE WHEN order_date >= join_date THEN 'Y' ELSE 'N' END AS member
+    FROM dannys_diner.sales
+        JOIN dannys_diner.menu USING (product_ID)
+        LEFT JOIN dannys_diner.members USING (customer_id)
+)
+SELECT 
+    *,
+    CASE 
+        WHEN member = 'N' THEN NULL 
+        ELSE DENSE_RANK() OVER(PARTITION BY customer_id, member ORDER BY order_date) 
+    END AS ranking
+FROM is_member
+ORDER BY customer_id, order_date;
 ```
+
+#### Steps:
+- We wrap the previous Query from the first Bonus Question into a CTE named `is_member`
+- In the main query we create another case statement that uses a window function the generate the rankings: `WHEN member = 'N' THEN NULL` `ELSE DENSE_RANK() OVER(PARTITION BY customer_id, member ORDER BY order_date)`
 
 #### Answer: 
 | customer_id | order_date | product_name | price | member | ranking | 
