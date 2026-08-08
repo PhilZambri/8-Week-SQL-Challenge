@@ -422,32 +422,45 @@ Let's break down the question to understand the point calculation for each custo
 ### 📌 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?
 
 ```sql
-
+WITH get_points AS (
+    SELECT 
+        customer_id,
+        CASE
+			WHEN product_id = 1 OR (order_date >= join_date AND order_date < join_date + 7) THEN price * 20
+			ELSE price * 10
+		END AS points
+    FROM dannys_diner.sales
+        JOIN dannys_diner.menu USING (product_ID)
+        JOIN dannys_diner.members USING (customer_id)
+    WHERE order_date >= '2021-01-01' AND order_date < '2021-02-01'
+)
+SELECT 
+    customer_id, 
+    SUM(points) AS total_points
+FROM get_points
+GROUP BY customer_id
+ORDER BY customer_id;
 ```
 
 #### Assumptions:
-- On Day -X to Day 1 (the day a customer becomes a member), each $1 spent earns 10 points. However, for sushi, each $1 spent earns 20 points.
-- From Day 1 to Day 7 (the first week of membership), each $1 spent for any items earns 20 points.
-- From Day 8 to the last day of January 2021, each $1 spent earns 10 points. However, sushi continues to earn double the points at 20 points per $1 spent.
+- each $1 spent equates to 10 points and sushi still has a 2x points multiplier
+- the first week after a customer joins the program (including their join date) they earn 2x points on all items
 
 #### Steps:
-- Create a CTE called `dates_cte`. 
-- In `dates_cte`, calculate the `valid_date` by adding 6 days to the `join_date` and determine the `last_date` of the month by subtracting 1 day from the last day of January 2021.
-- From `dannys_diner.sales` table, join `dates_cte` on `customer_id` column, ensuring that the `order_date` of the sale is after the `join_date` (`dates.join_date <= sales.order_date`) and not later than the `last_date` (`sales.order_date <= dates.last_date`).
-- Then, join `dannys_diner.menu` table based on the `product_id` column.
-- In the outer query, calculate the points by using a `CASE` statement to determine the points based on our assumptions above. 
-    - If the `product_name` is 'sushi', multiply the price by 2 and then by 10. For orders placed between `join_date` and `valid_date`, also multiply the price by 2 and then by 10. 
-    - For all other products, multiply the price by 10.
-- Calculate the sum of points for each customer.
+- Join the tables `sales`, `menu`, `members`
+- Filter for `order_date` in January
+- Calculate the total points based on the requirements by using a case statement: `product_id = 1` or `(order_date >= join_date AND order_date < join_date + 7`
+- Place this query into a CTE called `get_points`
+- In the main query, we `GROUP BY customer_id` and `SUM(points) AS total_points`
 
 #### Answer:
 | customer_id | total_points | 
 | ----------- | ---------- |
-| A           | 1020 |
-| B           | 320 |
+| A           | 1370 |
+| B           | 820 |
 
-- Total points for Customer A is 1,020.
-- Total points for Customer B is 320.
+- Total points for Customer A is 1,370.
+- Total points for Customer B is 820.
 
 ***
 
@@ -458,9 +471,18 @@ Let's break down the question to understand the point calculation for each custo
 **Recreate the table with: customer_id, order_date, product_name, price, member (Y/N)**
 
 ```sql
-
+SELECT 
+    customer_id, order_date, product_name, price,
+    CASE WHEN order_date >= join_date THEN 'Y' ELSE 'N' END AS member
+FROM dannys_diner.sales
+    JOIN dannys_diner.menu USING (product_ID)
+    LEFT JOIN dannys_diner.members USING (customer_id)
+ORDER BY customer_id, order_date;
 ```
- 
+#### Steps:
+- Join the tables `sales`, `menu`, `members`, ensuring we use a `LEFT JOIN` on members as to not exclude non-members
+- Use a CASE statment to generate the members column `CASE WHEN order_date >= join_date THEN 'Y' ELSE 'N' END AS member`
+
 #### Answer: 
 | customer_id | order_date | product_name | price | member |
 | ----------- | ---------- | -------------| ----- | ------ |
