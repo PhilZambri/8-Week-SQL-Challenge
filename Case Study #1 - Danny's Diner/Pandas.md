@@ -81,12 +81,13 @@ display(sales_menu)
 ### 📌 2. How many days has each customer visited the restaurant?
 
 ````python
-
+days_visited = sales.groupby('customer_id').agg(days_visited=('order_date', 'nunique'))
+display(days_visited)
 ````
 
 #### Steps:
-- To determine the unique number of visits for each customer, utilize **COUNT(DISTINCT `order_date`)**.
-- It's important to apply the **DISTINCT** keyword while calculating the visit count to avoid duplicate counting of days. For instance, if Customer A visited the restaurant twice on '2021–01–07', counting without **DISTINCT** would result in 2 days instead of the accurate count of 1 day.
+- To determine the unique number of visits for each customer, utilize `nunique`.
+- Groupby `customer_id` and aggregate using `nunique` on `order_date` in a column labeled `days_visited`
 
 #### Answer:
 | customer_id | days_visited |
