@@ -105,19 +105,30 @@ display(days_visited)
 ### 📌 3. What was the first item from the menu purchased by each customer?
 
 ````python
+sales_menu = sales.merge(menu, on='product_id')
 
+sales_menu['order_date_rank'] = sales_menu.groupby('customer_id')['order_date'].rank(method='dense')
+first_purchased_items = sales_menu.loc[sales_menu['order_date_rank'] == 1, ['customer_id', 'product_name']].drop_duplicates()
+display(first_purchased_items)
 ````
 
+#### Steps:
+- Use `merge` to join `sales` and `menu` on `product_id`
+- In order to respect duplicates(where more than one order took place on the same day) we will utilize the `rank` function.
+- We `groupby` `customer_id`, calculate the `dense rank` on `ascending order date`, and save into a new column `order_date_rank`.
+- Then we simply filter the rows for where `order_date_rank = 1` and just select the `customer_id` and `product_name` columns.
+
 #### Answer:
-| customer_id | first_order | 
+| customer_id | product_name | 
 | ----------- | ----------- |
+| A           | sushi        |
 | A           | curry        |
 | B           | curry        | 
 | C           | ramen        |
 
-- Customer A's first order is curry.
-- Customer B's first order is curry.
-- Customer C's first order is ramen.
+- Customer A's first order was sushi and curry.
+- Customer B's first order was curry.
+- Customer C's first order was ramen.
 
 ***
 
