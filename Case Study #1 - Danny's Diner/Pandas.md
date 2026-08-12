@@ -135,12 +135,16 @@ display(first_purchased_items)
 ### 📌 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
 ````python
+sales_menu = sales.merge(menu, on='product_id')
 
+most_purchased_item = sales_menu.value_counts('product_name').head(1).reset_index().rename(columns={'count':'total_purchased'})
+display(most_purchased_item)
 ````
 
 #### Steps:
-- Perform a **COUNT** aggregation on the `product_name` column and **ORDER BY** the result in descending order using `total_purchased` field.
-- Apply the **LIMIT** 1 clause to filter and retrieve the highest number of purchased items.
+- Use `merge` to join `sales` and `menu` on `product_id`
+- Here we utilize the `value_counts` function on the `product_name` column
+- By default, `value_counts` automatically sorts in descending order. Therefore, we simply use `head(1)` to get the most purchased item. 
 
 #### Answer:
 | product_name | total_purchased | 
@@ -148,7 +152,7 @@ display(first_purchased_items)
 | ramen       | 8 |
 
 
-- Most purchased item on the menu is ramen which is 8 times. Yummy!
+- Most purchased item on the menu is ramen which is 8 times. Yum!
 
 ***
 
