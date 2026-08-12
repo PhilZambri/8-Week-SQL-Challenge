@@ -55,13 +55,15 @@ members = pd.read_sql(
 ### 📌 1. What is the total amount each customer spent at the restaurant?
 
 ````python
+sales_menu = sales.merge(menu, on='product_id')
 
+sales_menu = sales_menu.groupby('customer_id').agg(total_spent=('price', 'sum'))     
+display(sales_menu)
 ````
 
 #### Steps:
-- Use **JOIN** to merge `dannys_diner.sales` and `dannys_diner.menu` tables as `sales.customer_id` and `menu.price` are from both tables.
-- Use **SUM** to calculate the total sales contributed by each customer.
-- Group the aggregated results by `sales.customer_id`. 
+- Use **MERGE** to join `dannys_diner.sales` and `dannys_diner.menu` tables on `product_id` as we need the price information for this.
+- Groupby `customer_id` and aggregate by getting the **SUM** of `price` in a column labeled `total_spent`
 
 #### Answer:
 | customer_id | total_spent |
