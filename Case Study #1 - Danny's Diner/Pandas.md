@@ -306,7 +306,6 @@ display(sales_points)
 ```
 
 #### Steps:
-Let's break down the question to understand the point calculation for each customer's purchases.
 - Merge `sales` and `menu`.
 - Create the `points` column by utilizing `np.where`.
   - where `sales_points['product_id'] == 1` then `price` * 20 else `price` * 10.
