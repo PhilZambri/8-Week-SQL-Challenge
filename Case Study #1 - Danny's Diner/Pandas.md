@@ -154,6 +154,27 @@ display(most_purchased_item)
 
 - Most purchased item on the menu is ramen which is 8 times. Yum!
 
+### 📍 What is the most purchased item on the menu and how many times was it purchased total by all customers and by each customer?
+#### Alternatively, I provide an answer for the same question but a little more involved.
+
+````python
+most_purchased_id = sales.value_counts('product_id').index[0]
+
+x = (sales.loc[sales['product_id'] == most_purchased_id]
+     .merge(menu, on='product_id')
+     .groupby(['customer_id', 'product_name']).agg(total_purchased=('product_name', 'count')).reset_index())
+x.loc['Total'] = {'customer_id':'All Customers', 'product_name':x.iat[0,1], 'total_purchased':x['total_purchased'].sum()}
+display(x)
+````
+
+#### Answer:
+|-| customer_id | product_name | total_purchased | 
+|- | ----------- | ----------- | --- |
+|- | A           | ramen        | 3 |
+|- | B           | ramen        | 2 |
+|- | C           | ramen        | 3 |
+|Total| All Customers       | ramen        | 8 |
+
 ***
 
 ### 📌 5. Which item was the most popular for each customer?
