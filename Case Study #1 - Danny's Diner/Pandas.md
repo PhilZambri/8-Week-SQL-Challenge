@@ -350,7 +350,7 @@ display(sales_points)
 #### Steps:
 - Merge `sales`, `menu`, `members`
 - Filter for January - dates between `2021-01-01` and `2021-02-01`
-- Calculate `points column` - if `sushi` or `order_date` betwwen `join_date` and `join_date` + 7 days then `price*20` else `price * 10`
+- Calculate `points` column - if `sushi` or `order_date` betwwen `join_date` and `join_date` + 7 days then `price*20` else `price * 10`
 - Groupby `customer_id` and calculate `sum` of `points` to get the final result.
 
 #### Answer:
@@ -371,8 +371,19 @@ display(sales_points)
 **Recreate the table with: customer_id, order_date, product_name, price, member (Y/N)**
 
 ```python
+membership = sales.merge(menu, on='product_id').merge(members, how='left', on='customer_id')
 
+condition = ((membership['join_date'].isna()) | (membership['order_date'] < membership['join_date']))
+membership['member'] =  np.where(condition, 'N', 'Y')
+
+membership = membership.loc[:, ['customer_id', 'order_date', 'product_name', 'price', 'member']]
+display(membership)
 ```
+
+#### Steps:
+- Merge the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
+- Calculate the 'member' column - if `join_date` is `null` or `order_date` < `join_date` then 'N' else 'Y'
+- Finally, select only the columns we want.
  
 #### Answer: 
 | customer_id | order_date | product_name | price | member |
