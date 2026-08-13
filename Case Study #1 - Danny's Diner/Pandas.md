@@ -242,24 +242,28 @@ display(sales_menu_members)
 ### 📌 7. Which item was purchased just before the customer became a member?
 
 ````python
+sales_menu_members = sales.merge(menu, on='product_id').merge(members, on='customer_id')
 
+sales_menu_members = sales_menu_members.loc[sales_menu_members['order_date'] < sales_menu_members['join_date']]
+sales_menu_members['rank'] = sales_menu_members.groupby('customer_id')['order_date'].rank(method='dense', ascending=False)
+sales_menu_members = sales_menu_members.loc[sales_menu_members['rank'] == 1, ['customer_id', 'product_name', 'order_date', 'join_date']]
+display(sales_menu_members)
 ````
 
 #### Steps:
-- Create a CTE called `purchased_prior_member`. 
-- In the CTE, select the appropriate columns and calculate the rank using the **ROW_NUMBER()** window function. The rank is determined based on the order dates of the sales in descending order within each customer's group.
-- Join `dannys_diner.members` table with `dannys_diner.sales` table based on the `customer_id` column, only including sales that occurred *before* the customer joined as a member (`sales.order_date < members.join_date`).
-- Join `purchased_prior_member` CTE with `dannys_diner.menu` table based on `product_id` column.
-- Filter the result set to include only the rows where the rank is 1, representing the earliest purchase made by each customer before they became a member.
-- Sort the result by `customer_id` in ascending order.
+- Same as the previous question with two small changes
+- Filter for where `order_date` < `join_date` instead of  `order_date` >= `join_date`.
+- We perform a descending dense rank on `order_date` instead of ascending
 
 #### Answer:
-| customer_id | product_name |
-| ----------- | ---------- |
-| A           | sushi        |
-| B           | sushi        |
+| customer_id | product_name | order_date | join_date |
+| ----------- | ---------- | ----------- | ---------- |
+| A           | sushi        | 2021-01-01 | 2021-01-07 |
+| A           | curry        | 2021-01-01 | 2021-01-07 |
+| B           | sushi        | 2021-01-04 | 2021-01-09 |
 
-- Both customers' last order before becoming members are sushi.
+- Customer A ordered both sushi and curry on the first date before becoming a member.
+- Customer B ordered sushi on the first date before becoming a member.
 
 ***
 
