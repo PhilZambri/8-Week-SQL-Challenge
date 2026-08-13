@@ -211,24 +211,31 @@ display(item_total_purchases)
 ### 📌 6. Which item was purchased first by the customer after they became a member?
 
 ```python
+sales_menu_members = sales.merge(menu, on='product_id').merge(members, on='customer_id')
 
+sales_menu_members = sales_menu_members.loc[sales_menu_members['order_date'] >= sales_menu_members['join_date']]
+sales_menu_members['rank'] = sales_menu_members.groupby('customer_id')['order_date'].rank(method='dense')
+sales_menu_members = sales_menu_members.loc[sales_menu_members['rank'] == 1, ['customer_id', 'product_name', 'order_date', 'join_date']]
+display(sales_menu_members)
 ```
 
+*- We are assuming that an order on the same date as `join_date` is considered to be after becoming a member.*
+
 #### Steps:
-- Create a CTE named `joined_as_member` and within the CTE, select the appropriate columns and calculate the row number using the **ROW_NUMBER()** window function. The **PARTITION BY** clause divides the data by `members.customer_id` and the **ORDER BY** clause orders the rows within each `members.customer_id` partition by `sales.order_date`.
-- Join tables `dannys_diner.members` and `dannys_diner.sales` on `customer_id` column. Additionally, apply a condition to only include sales that occurred *after* the member's `join_date` (`sales.order_date > members.join_date`).
-- In the outer query, join the `joined_as_member` CTE with the `dannys_diner.menu` on the `product_id` column.
-- In the **WHERE** clause, filter to retrieve only the rows where the row_num column equals 1, representing the first row within each `customer_id` partition.
-- Order result by `customer_id` in ascending order.
+- Merge `sales`, `menu`, `members`.
+- Filter for where `order_date` >= `join_date`.
+- We create a `rank` column by using an ascending dense rank on `order_date` grouped by `customer_id`.
+- Finally, we filter for where `sales_menu_members['rank'] == 1` and select the necessary columns.
+
 
 #### Answer:
-| customer_id | product_name |
-| ----------- | ---------- |
-| A           | ramen        |
-| B           | sushi        |
+| customer_id | product_name | order_date | join_date |
+| ----------- | ---------- | ----------- | ---------- |
+| A           | curry        | 2021-01-07 | 2021-01-07 |
+| B           | sushi        | 2021-01-11 | 2021-01-09 |
 
-- Customer A's first order as a member is ramen.
-- Customer B's first order as a member is sushi.
+- Customer A's first order as a member was ramen.
+- Customer B's first order as a member was sushi.
 
 ***
 
