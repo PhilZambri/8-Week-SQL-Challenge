@@ -270,15 +270,17 @@ display(sales_menu_members)
 ### 📌 8. What is the total items and amount spent for each member before they became a member?
 
 ```python
+sales_menu_members = sales.merge(menu, on='product_id').merge(members, on='customer_id')
 
+sales_menu_members = sales_menu_members.loc[sales_menu_members['order_date'] < sales_menu_members['join_date']]
+sales_menu_members = sales_menu_members.groupby('customer_id').agg(total_items=('customer_id', 'count'), total_spent=('price', 'sum'))
+display(sales_menu_members)
 ```
 
 #### Steps:
-- Select the columns `sales.customer_id` and calculate the count of `sales.product_id` as total_items for each customer and the sum of `menu.price` as total_sales.
-- From `dannys_diner.sales` table, join `dannys_diner.members` table on `customer_id` column, ensuring that `sales.order_date` is earlier than `members.join_date` (`sales.order_date < members.join_date`).
-- Then, join `dannys_diner.menu` table to `dannys_diner.sales` table on `product_id` column.
-- Group the results by `sales.customer_id`.
-- Order the result by `sales.customer_id` in ascending order.
+-  Merge `sales`, `menu`, `members`.
+-  Filter for where `order_date` < `join_date`
+-  Groupby `customer_id` and calculate the `count` and the `sum` of `price`
 
 #### Answer:
 | customer_id | total_items | total_sales |
