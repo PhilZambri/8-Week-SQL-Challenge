@@ -26,6 +26,7 @@ Using SQLAlchemy, we can query the local postgresql database named '8 WeekSQLCha
 from dannys_diner into three Pandas Dataframes. We will use these dataframes to answer all of the following case study questions.
 
 ```python
+import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -297,16 +298,20 @@ Before becoming members,
 ### 📌 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier — how many points would each customer have?
 
 ```python
+sales_points = sales.merge(menu, on='product_id')
 
+sales_points['points'] = np.where(sales_points['product_id'] == 1, sales_points['price']*20, sales_points['price']*10)
+sales_points = sales_points.groupby('customer_id').agg(total_points=('points', 'sum'))
+display(sales_points)
 ```
 
 #### Steps:
 Let's break down the question to understand the point calculation for each customer's purchases.
-- Each $1 spent = 10 points. However, `product_id` 1 sushi gets 2x points, so each $1 spent = 20 points.
-- Here's how the calculation is performed using a conditional CASE statement:
-	- If product_id = 1, multiply every $1 by 20 points.
-	- Otherwise, multiply $1 by 10 points.
-- Then, calculate the total points for each customer.
+- Merge `sales` and `menu`.
+- Create the `points` column by utilizing `np.where`.
+  - where `sales_points['product_id'] == 1` then `price` * 20 else `price` * 10.
+- Groupby `customer_id` and calculate `sum` of `points` to get the final result.
+
 
 #### Answer:
 | customer_id | total_points | 
@@ -315,9 +320,9 @@ Let's break down the question to understand the point calculation for each custo
 | B           | 940 |
 | C           | 360 |
 
-- Total points for Customer A is $860.
-- Total points for Customer B is $940.
-- Total points for Customer C is $360.
+- Total points for Customer A is 860.
+- Total points for Customer B is 940.
+- Total points for Customer C is 360.
 
 ***
 
