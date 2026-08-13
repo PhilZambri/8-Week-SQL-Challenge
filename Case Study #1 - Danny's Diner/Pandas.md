@@ -180,16 +180,19 @@ display(x)
 ### 📌 5. Which item was the most popular for each customer?
 
 ````python
+item_total_purchases = sales.groupby(['customer_id', 'product_id']).agg(total_purchased=('product_id', 'count')).reset_index()
+item_total_purchases['total_purchased_rank'] = item_total_purchases.groupby('customer_id')['total_purchased'].rank(method='dense', ascending=False)
 
+item_total_purchases = item_total_purchases.merge(menu, on='product_id').loc[item_total_purchases['total_purchased_rank'] == 1, ['customer_id', 'product_name', 'total_purchased']]
+display(item_total_purchases)
 ````
 
 *Each user may have more than 1 most ordered item.*
 
 #### Steps:
-- Create a CTE named `ranked` and within the CTE, join the `menu` table and `sales` table using the `product_id` column.
-- Group results by `sales.customer_id` and `menu.product_name` and calculate the count of `menu.product_id` occurrences for each group. 
-- Utilize the **DENSE_RANK()** window function to calculate the ranking of each `sales.customer_id` partition based on the count of orders **COUNT(`sales.customer_id`)** in descending order.
-- In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, representing the rows with the highest order count for each customer.
+- First we get the total purchases of each product for each customer. Groupby `'customer_id', 'product_id'` and count.
+- Next, we create `total_purchased_rank` column by using a descending dense rank on `total_purchased` grouped by `customer_id`.
+- Finally we merge the resulting frame with menu, and simply filter for where `item_total_purchases['total_purchased_rank'] == 1`.
 
 #### Answer:
 | customer_id | most_ordered | order_count |
