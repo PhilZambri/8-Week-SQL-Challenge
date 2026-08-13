@@ -328,32 +328,39 @@ display(sales_points)
 ### 📌 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?
 
 ```python
+from datetime import timedelta
 
+sales_points = sales.merge(menu, on='product_id').merge(members, on='customer_id')
+date_condition = ((sales_points['order_date'] >= '2021-01-01') & (sales_points['order_date'] < '2021-02-01'))
+sales_points = sales_points.loc[date_condition]
+
+condition = (sales_points['product_id'] == 1) | (
+    (sales_points['order_date'] >= sales_points['join_date'])
+    & (sales_points['order_date'] < (sales_points['join_date'] + timedelta(days=7)))
+)
+sales_points['points'] = np.where(condition, sales_points['price']*20, sales_points['price']*10)
+sales_points = sales_points.groupby('customer_id').agg(total_points=('points', 'sum'))
+display(sales_points)
 ```
 
 #### Assumptions:
-- On Day -X to Day 1 (the day a customer becomes a member), each $1 spent earns 10 points. However, for sushi, each $1 spent earns 20 points.
-- From Day 1 to Day 7 (the first week of membership), each $1 spent for any items earns 20 points.
-- From Day 8 to the last day of January 2021, each $1 spent earns 10 points. However, sushi continues to earn double the points at 20 points per $1 spent.
+- each $1 spent equates to 10 points and sushi still has a 2x points multiplier
+- the first week after a customer joins the program (including their join date) they earn 2x points on all items
 
 #### Steps:
-- Create a CTE called `dates_cte`. 
-- In `dates_cte`, calculate the `valid_date` by adding 6 days to the `join_date` and determine the `last_date` of the month by subtracting 1 day from the last day of January 2021.
-- From `dannys_diner.sales` table, join `dates_cte` on `customer_id` column, ensuring that the `order_date` of the sale is after the `join_date` (`dates.join_date <= sales.order_date`) and not later than the `last_date` (`sales.order_date <= dates.last_date`).
-- Then, join `dannys_diner.menu` table based on the `product_id` column.
-- In the outer query, calculate the points by using a `CASE` statement to determine the points based on our assumptions above. 
-    - If the `product_name` is 'sushi', multiply the price by 2 and then by 10. For orders placed between `join_date` and `valid_date`, also multiply the price by 2 and then by 10. 
-    - For all other products, multiply the price by 10.
-- Calculate the sum of points for each customer.
+- Merge `sales`, `menu`, `members`
+- Filter for January - dates between `2021-01-01` and `2021-02-01`
+- Calculate `points column` - if `sushi` or `order_date` betwwen `join_date` and `join_date` + 7 days then `price*20` else `price * 10`
+- Groupby `customer_id` and calculate `sum` of `points` to get the final result.
 
 #### Answer:
 | customer_id | total_points | 
 | ----------- | ---------- |
-| A           | 1020 |
-| B           | 320 |
+| A           | 1370 |
+| B           | 820 |
 
-- Total points for Customer A is 1,020.
-- Total points for Customer B is 320.
+- Total points for Customer A is 1,370.
+- Total points for Customer B is 820.
 
 ***
 
