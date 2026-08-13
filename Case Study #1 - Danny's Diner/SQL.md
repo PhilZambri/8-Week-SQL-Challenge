@@ -274,9 +274,10 @@ WHERE order_date >= join_date
 QUALIFY DENSE_RANK() OVER(PARTITION BY customer_id ORDER BY order_date) = 1;
 ````
 
+*- We are assuming that an order on the same date as `join_date` is considered to be after becoming a member.*
+
 #### Steps:
 - Create a CTE named `rankings` and within the CTE, select the appropriate columns and calculate the rank using the **DENSE_RANK()** window function. The **PARTITION BY** clause divides the data by `members.customer_id` and the **ORDER BY** clause orders the rows within each `members.customer_id` partition by `sales.order_date`.
-- We are assuming that an order on the same date as `join_date` is considered to be after becoming a member.
 - Join tables `dannys_diner.members` and `dannys_diner.sales` on `customer_id` column. Additionally, apply a condition to only include sales that occurred *after* the member's `join_date` (`sales.order_date >= members.join_date`).
 - In the outer query, join the `joined_as_member` CTE with the `dannys_diner.menu` on the `product_id` column.
 - In the **WHERE** clause, filter to retrieve only the rows where the row_num column equals 1, representing the first row within each `customer_id` partition.
