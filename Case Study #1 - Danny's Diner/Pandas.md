@@ -373,8 +373,8 @@ display(sales_points)
 ```python
 membership = sales.merge(menu, on='product_id').merge(members, how='left', on='customer_id')
 
-condition = ((membership['join_date'].isna()) | (membership['order_date'] < membership['join_date']))
-membership['member'] =  np.where(condition, 'N', 'Y')
+condition = (membership['order_date'] >= membership['join_date'])
+membership['member'] =  np.where(condition, 'Y', 'N')
 
 membership = membership.loc[:, ['customer_id', 'order_date', 'product_name', 'price', 'member']]
 display(membership)
@@ -382,7 +382,7 @@ display(membership)
 
 #### Steps:
 - Merge the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
-- Calculate the 'member' column - if `join_date` is `null` or `order_date` < `join_date` then 'N' else 'Y'
+- Calculate the 'member' column - if `order_date` >= `join_date` then 'Y' else 'N'
 - Finally, select only the columns we want.
  
 #### Answer: 
