@@ -411,8 +411,23 @@ display(membership)
 **Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.**
 
 ```python
+membership = sales.merge(menu, on='product_id').merge(members, how='left', on='customer_id')
 
+condition = (membership['order_date'] >= membership['join_date'])
+membership['member'] =  np.where(condition, 'Y', 'N')
+
+condition = membership['member'] == 'N'
+membership['ranking'] = np.where(condition, pd.NA, membership.groupby(['customer_id', 'member'])['order_date'].rank('dense'))
+
+membership = membership.loc[:, ['customer_id', 'order_date', 'product_name', 'price', 'member', 'ranking']]
+display(membership)
 ```
+
+#### Steps:
+- Merge the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
+- Calculate the `member` column - if `order_date` >= `join_date` then 'Y' else 'N'.
+- Calculate the `ranking` column - if `member` == `'N'` then `pd.NA`, else groupby `(customer_id, member)` and get the dense rank on ascending `order_date`.
+- Finally, select only the columns we want.
 
 #### Answer: 
 | customer_id | order_date | product_name | price | member | ranking | 
