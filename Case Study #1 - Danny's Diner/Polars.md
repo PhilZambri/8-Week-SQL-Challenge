@@ -98,12 +98,33 @@ print(df)
 ### 📌 2. How many days has each customer visited the restaurant?
 
 ````python
+# Eager
 
+unique_days_visited = (
+                        sales
+                       .group_by('customer_id')
+                       .agg(days_visited = pl.col('order_date').n_unique())
+                       .sort('customer_id')
+                      )
+print(unique_days_visited)
+````
+````python
+# Lazy
+
+q = (
+     sales_lazy
+     .group_by('customer_id')
+     .agg(days_visited = pl.col('order_date').n_unique())
+     .sort('customer_id')
+    )
+df = q.collect()
+print(df)
 ````
 
 #### Steps:
-- To determine the unique number of visits for each customer, utilize **COUNT(DISTINCT `order_date`)**.
-- It's important to apply the **DISTINCT** keyword while calculating the visit count to avoid duplicate counting of days. For instance, if Customer A visited the restaurant twice on '2021–01–07', counting without **DISTINCT** would result in 2 days instead of the accurate count of 1 day.
+- Group_by `customer_id`.
+- Create the `days_visited` column by using the `n_unique` function on the `order_date` column.
+- Sort by `customer_id`.
 
 #### Answer:
 | customer_id | days_visited |
