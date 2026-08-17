@@ -41,6 +41,10 @@ menu = pl.read_database_uri(
 members = pl.read_database_uri(
     query="SELECT * FROM dannys_diner.members", 
     uri=uri)
+
+sales_lazy = sales.lazy()
+menu_lazy = menu.lazy()
+members_lazy = members.lazy()
 ```
 
 ***
@@ -50,13 +54,33 @@ members = pl.read_database_uri(
 ### 📌 1. What is the total amount each customer spent at the restaurant?
 
 ````python
+# Eager
 
+sales_menu = sales.join(menu, on='product_id')
+sales_menu = (sales_menu
+             .group_by('customer_id')
+             .agg(total_spent=pl.col('price').sum())
+             .sort('customer_id'))
+print(sales_menu)
+````
+````python
+# Lazy
+
+q = (
+    sales_lazy.join(menu_lazy, on='product_id')
+    .group_by('customer_id')
+    .agg(pl.col('price').sum().alias('total_spent'))
+    .sort('customer_id')
+)
+
+df = q.collect()
+print(df)
 ````
 
 #### Steps:
-- Use **JOIN** to merge `dannys_diner.sales` and `dannys_diner.menu` tables as `sales.customer_id` and `menu.price` are from both tables.
-- Use **SUM** to calculate the total sales contributed by each customer.
-- Group the aggregated results by `sales.customer_id`. 
+- Use **JOIN** to merge `sales` and `menu` on `product_id`.
+- Groupby `customer_id` and calculate the `sum` of `price` into a column named `total_spent`.
+- Finally, we sort by `customer_id`.
 
 #### Answer:
 | customer_id | total_spent |
