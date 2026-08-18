@@ -117,9 +117,9 @@ QUALIFY RANK() OVER(PARTITION BY customer_id ORDER BY order_date) = 1;
 | B           | curry        | 
 | C           | ramen        |
 
-- Customer A's first order is sushi and curry.
-- Customer B's first order is curry.
-- Customer C's first order is ramen.
+- Customer A's first order was sushi and curry.
+- Customer B's first order was curry.
+- Customer C's first order was ramen.
 
 ***
 
