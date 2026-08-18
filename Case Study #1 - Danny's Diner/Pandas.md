@@ -196,7 +196,7 @@ display(item_total_purchases)
 - Finally we merge the resulting frame with menu, and simply filter for where `item_total_purchases['total_purchased_rank'] == 1`.
 
 #### Answer:
-| customer_id | most_ordered | order_count |
+| customer_id | product_name | order_count |
 | ----------- | ---------- |------------  |
 | A           | ramen        |  3   |
 | B           | sushi        |  2   |
@@ -204,7 +204,7 @@ display(item_total_purchases)
 | B           | ramen        |  2   |
 | C           | ramen        |  3   |
 
-- Customer A and C's favourite item is ramen.
+- Customer A and C's favorite item is ramen.
 - Customer B enjoys all items on the menu.
 
 ***
