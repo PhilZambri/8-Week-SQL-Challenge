@@ -234,7 +234,7 @@ ORDER BY customer_id, product_name;
 | B           | ramen        |  2   |
 | C           | ramen        |  3   |
 
-- Customer A and C's favourite item is ramen.
+- Customer A and C's favorite item is ramen.
 - Customer B enjoys all items on the menu equally.
 
 ***
