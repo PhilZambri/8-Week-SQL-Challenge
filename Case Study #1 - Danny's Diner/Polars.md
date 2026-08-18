@@ -308,48 +308,87 @@ print(df)
 ### 📌 6. Which item was purchased first by the customer after they became a member?
 
 ```python
+# Eager
 
+first_purchase = (sales.join(menu, on='product_id').join(members, on='customer_id')
+                  .filter(pl.col('order_date') >= pl.col('join_date'))
+                  .with_columns(rank=pl.col('order_date').rank(method='dense').over(partition_by='customer_id'))
+                  .filter(pl.col('rank') == 1)
+                  .select('customer_id', 'product_name', 'order_date', 'join_date'))
+
+print(first_purchase)
+```
+```python
+# Lazy
+
+first_purchase = (sales_lazy.join(menu_lazy, on='product_id').join(members_lazy, on='customer_id')
+                  .filter(pl.col('order_date') >= pl.col('join_date'))
+                  .with_columns(rank=pl.col('order_date').rank(method='dense').over(partition_by='customer_id'))
+                  .filter(pl.col('rank') == 1)
+                  .select('customer_id', 'product_name', 'order_date', 'join_date'))
+
+df = first_purchase.collect()
+print(df)
 ```
 
 #### Steps:
-- Create a CTE named `joined_as_member` and within the CTE, select the appropriate columns and calculate the row number using the **ROW_NUMBER()** window function. The **PARTITION BY** clause divides the data by `members.customer_id` and the **ORDER BY** clause orders the rows within each `members.customer_id` partition by `sales.order_date`.
-- Join tables `dannys_diner.members` and `dannys_diner.sales` on `customer_id` column. Additionally, apply a condition to only include sales that occurred *after* the member's `join_date` (`sales.order_date > members.join_date`).
-- In the outer query, join the `joined_as_member` CTE with the `dannys_diner.menu` on the `product_id` column.
-- In the **WHERE** clause, filter to retrieve only the rows where the row_num column equals 1, representing the first row within each `customer_id` partition.
-- Order result by `customer_id` in ascending order.
+- Join `sales`, `menu`, and `members`.
+- Filter for where `order_date` >= `join_date`.
+- We then calculate the `rank` column by getting the dense rank on ascending `order_date`, partitioned by `customer_id`.
+- Filter for where `rank == 1`.
+- Select the desired columns.
 
 #### Answer:
-| customer_id | product_name |
-| ----------- | ---------- |
-| A           | ramen        |
-| B           | sushi        |
+| customer_id | product_name | order_date | join_date |
+| ----------- | ---------- | ----------- | ---------- |
+| A           | curry        | 2021-01-07 | 2021-01-07 |
+| B           | sushi        | 2021-01-11 | 2021-01-09 |
 
-- Customer A's first order as a member is ramen.
-- Customer B's first order as a member is sushi.
+- Customer A's first order as a member was ramen.
+- Customer B's first order as a member was sushi.
 
 ***
 
 ### 📌 7. Which item was purchased just before the customer became a member?
 
 ````python
+# Eager
 
+first_purchase = (sales.join(menu, on='product_id').join(members, on='customer_id')
+                  .filter(pl.col('order_date') < pl.col('join_date'))
+                  .with_columns(rank=pl.col('order_date').rank(method='dense', descending=True).over(partition_by='customer_id'))
+                  .filter(pl.col('rank') == 1)
+                  .select('customer_id', 'product_name', 'order_date', 'join_date'))
+
+print(first_purchase)
 ````
+```python
+# Lazy
+
+first_purchase = (sales_lazy.join(menu_lazy, on='product_id').join(members_lazy, on='customer_id')
+                  .filter(pl.col('order_date') < pl.col('join_date'))
+                  .with_columns(rank=pl.col('order_date').rank(method='dense', descending=True).over(partition_by='customer_id'))
+                  .filter(pl.col('rank') == 1)
+                  .select('customer_id', 'product_name', 'order_date', 'join_date'))
+
+df = first_purchase.collect()
+print(df)
+```
 
 #### Steps:
-- Create a CTE called `purchased_prior_member`. 
-- In the CTE, select the appropriate columns and calculate the rank using the **ROW_NUMBER()** window function. The rank is determined based on the order dates of the sales in descending order within each customer's group.
-- Join `dannys_diner.members` table with `dannys_diner.sales` table based on the `customer_id` column, only including sales that occurred *before* the customer joined as a member (`sales.order_date < members.join_date`).
-- Join `purchased_prior_member` CTE with `dannys_diner.menu` table based on `product_id` column.
-- Filter the result set to include only the rows where the rank is 1, representing the earliest purchase made by each customer before they became a member.
-- Sort the result by `customer_id` in ascending order.
+- Same as the previous question with two small changes.
+- Filter for where `order_date` < `join_date` instead of  `order_date` >= `join_date`.
+- We perform a descending dense rank on `order_date` instead of ascending.
 
 #### Answer:
-| customer_id | product_name |
-| ----------- | ---------- |
-| A           | sushi        |
-| B           | sushi        |
+| customer_id | product_name | order_date | join_date |
+| ----------- | ---------- | ----------- | ---------- |
+| A           | sushi        | 2021-01-01 | 2021-01-07 |
+| A           | curry        | 2021-01-01 | 2021-01-07 |
+| B           | sushi        | 2021-01-04 | 2021-01-09 |
 
-- Both customers' last order before becoming members are sushi.
+- Customer A ordered both sushi and curry on the first date before becoming a member.
+- Customer B ordered sushi on the first date before becoming a member.
 
 ***
 
