@@ -395,18 +395,35 @@ print(df)
 ### 📌 8. What is the total items and amount spent for each member before they became a member?
 
 ```python
+# Eager
 
+totals = (sales.join(menu, on='product_id').join(members, on='customer_id')
+          .filter(pl.col('order_date') < pl.col('join_date'))
+          .group_by('customer_id')
+          .agg(total_items=pl.col('customer_id').len(), total_spent=pl.col('price').sum()))
+
+print(totals)
+```
+```python
+# Lazy
+
+totals = (sales_lazy.join(menu_lazy, on='product_id').join(members_lazy, on='customer_id')
+          .filter(pl.col('order_date') < pl.col('join_date'))
+          .group_by('customer_id')
+          .agg(total_items=pl.col('customer_id').len(), total_spent=pl.col('price').sum()))
+
+df = totals.collect()
+print(df)
 ```
 
 #### Steps:
-- Select the columns `sales.customer_id` and calculate the count of `sales.product_id` as total_items for each customer and the sum of `menu.price` as total_sales.
-- From `dannys_diner.sales` table, join `dannys_diner.members` table on `customer_id` column, ensuring that `sales.order_date` is earlier than `members.join_date` (`sales.order_date < members.join_date`).
-- Then, join `dannys_diner.menu` table to `dannys_diner.sales` table on `product_id` column.
-- Group the results by `sales.customer_id`.
-- Order the result by `sales.customer_id` in ascending order.
+- Join `sales`, `menu`, and `members`.
+- Filter for where `order_date` < `join_date`.
+- Group_by `customer_id`.
+- Calculate the count using `len()` and `total_spent` by getting the sum of `price`.
 
 #### Answer:
-| customer_id | total_items | total_sales |
+| customer_id | total_items | total_spent |
 | ----------- | ---------- |----------  |
 | A           | 2 |  25       |
 | B           | 3 |  40       |
