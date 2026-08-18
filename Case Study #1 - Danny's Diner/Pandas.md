@@ -284,7 +284,7 @@ display(sales_menu_members)
 -  Groupby `customer_id` and calculate the `count` and the `sum` of `price`
 
 #### Answer:
-| customer_id | total_items | total_sales |
+| customer_id | total_items | total_spent |
 | ----------- | ---------- |----------  |
 | A           | 2 |  25       |
 | B           | 3 |  40       |
