@@ -258,19 +258,41 @@ print(result )
 ### 📌 5. Which item was the most popular for each customer?
 
 ````python
+# Eager
 
+most_purchased_items = (sales.join(menu, on='product_id')
+                        .group_by('customer_id', 'product_name').len(name='order_count')
+                        .with_columns(rank=pl.col('order_count').rank(method='dense', descending=True).over(partition_by='customer_id'))
+                        .filter(pl.col('rank') == 1)
+                        .select('customer_id', 'product_name', 'order_count')
+                        .sort('customer_id'))
+
+print(most_purchased_items)
+````
+````python
+# Lazy 
+
+most_purchased_items = (sales_lazy.join(menu_lazy, on='product_id')
+                        .group_by('customer_id', 'product_name').len(name='order_count')
+                        .with_columns(rank=pl.col('order_count').rank(method='dense', descending=True).over(partition_by='customer_id'))
+                        .filter(pl.col('rank') == 1)
+                        .select('customer_id', 'product_name', 'order_count')
+                        .sort('customer_id'))
+
+df = most_purchased_items.collect()
+print(df)
 ````
 
 *Each user may have more than 1 most ordered item.*
 
 #### Steps:
-- Create a CTE named `ranked` and within the CTE, join the `menu` table and `sales` table using the `product_id` column.
-- Group results by `sales.customer_id` and `menu.product_name` and calculate the count of `menu.product_id` occurrences for each group. 
-- Utilize the **DENSE_RANK()** window function to calculate the ranking of each `sales.customer_id` partition based on the count of orders **COUNT(`sales.customer_id`)** in descending order.
-- In the outer query, select the appropriate columns and apply a filter in the **WHERE** clause to retrieve only the rows where the rank column equals 1, representing the rows with the highest order count for each customer.
+- Join `sales` and `menu` on `product_id`.
+- Group_by `(customer_id, product_name)` and use `len()` to count the total orders for each product for each customer.
+- We execute a dense rank on descending `order_count` partitioned by `customer_id` to obtain the `rank` column.
+- Then we filter for where `rank == 1`, select the columns we want and sort by `customer_id`.
 
 #### Answer:
-| customer_id | most_ordered | order_count |
+| customer_id | product_name | order_count |
 | ----------- | ---------- |------------  |
 | A           | ramen        |  3   |
 | B           | sushi        |  2   |
@@ -278,7 +300,7 @@ print(result )
 | B           | ramen        |  2   |
 | C           | ramen        |  3   |
 
-- Customer A and C's favourite item is ramen.
+- Customer A and C's favorite item is ramen.
 - Customer B enjoys all items on the menu.
 
 ***
