@@ -61,17 +61,16 @@ sales_menu = (sales_menu
              .group_by('customer_id')
              .agg(total_spent=pl.col('price').sum())
              .sort('customer_id'))
+
 print(sales_menu)
 ````
 ````python
 # Lazy
 
-q = (
-    sales_lazy.join(menu_lazy, on='product_id')
+q = (sales_lazy.join(menu_lazy, on='product_id')
     .group_by('customer_id')
     .agg(pl.col('price').sum().alias('total_spent'))
-    .sort('customer_id')
-)
+    .sort('customer_id'))
 
 df = q.collect()
 print(df)
@@ -100,23 +99,21 @@ print(df)
 ````python
 # Eager
 
-unique_days_visited = (
-                        sales
+unique_days_visited = (sales
                        .group_by('customer_id')
                        .agg(days_visited = pl.col('order_date').n_unique())
-                       .sort('customer_id')
-                      )
+                       .sort('customer_id'))
+
 print(unique_days_visited)
 ````
 ````python
 # Lazy
 
-q = (
-     sales_lazy
+q = (sales_lazy
      .group_by('customer_id')
      .agg(days_visited = pl.col('order_date').n_unique())
-     .sort('customer_id')
-    )
+     .sort('customer_id'))
+
 df = q.collect()
 print(df)
 ````
@@ -142,19 +139,47 @@ print(df)
 ### 📌 3. What was the first item from the menu purchased by each customer?
 
 ````python
+# Eager
 
+first_order = (sales.join(menu, on='product_id')
+               .with_columns(rank=pl.col('order_date').rank(method='dense').over(partition_by='customer_id'))
+               .filter(pl.col('rank') == 1)
+               .select('customer_id', pl.col('product_name').alias('first_order'))
+               .unique()
+               .sort('customer_id'))
+
+print(first_order)
 ````
+````python
+# Lazy
+
+first_order = (sales_lazy.join(menu_lazy, on='product_id')
+               .with_columns(rank=pl.col('order_date').rank(method='dense').over(partition_by='customer_id'))
+               .filter(pl.col('rank') == 1)
+               .select('customer_id', pl.col('product_name').alias('first_order'))
+               .unique()
+               .sort('customer_id'))
+
+df = first_order.collect()
+print(df)  
+````
+#### Steps:
+- Join `sales` and `menu` on `product_id`.
+- In order to respect duplicates(where more than one order took place on the same day) we will utilize the `rank` function.
+- We calculate the `dense rank` on ascending `order_date`, grouped by `customer_id` and save into a new column named `rank`.
+- Then we filter the rows for where `rank = 1` and select just the unique `customer_id` and `product_name` columns.
 
 #### Answer:
 | customer_id | first_order | 
 | ----------- | ----------- |
+| A           | sushi        |
 | A           | curry        |
 | B           | curry        | 
 | C           | ramen        |
 
-- Customer A's first order is curry.
-- Customer B's first order is curry.
-- Customer C's first order is ramen.
+- Customer A's first order was sushi and curry.
+- Customer B's first order was curry.
+- Customer C's first order was ramen.
 
 ***
 
