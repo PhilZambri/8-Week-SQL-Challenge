@@ -186,12 +186,31 @@ print(df)
 ### 📌 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
 ````python
+# Eager
 
+most_purchased_item = (sales.join(menu, on='product_id')
+                       .group_by('product_name')
+                       .len(name='total_purchased')
+                       .top_k(1, by='total_purchased'))
+
+print(most_purchased_item)
+````
+````python
+# Lazy
+
+most_purchased_item = (sales_lazy.join(menu_lazy, on='product_id')
+                       .group_by('product_name')
+                       .len(name='total_purchased')
+                       .top_k(1, by='total_purchased'))
+
+df = most_purchased_item.collect()
+print(df)
 ````
 
 #### Steps:
-- Perform a **COUNT** aggregation on the `product_name` column and **ORDER BY** the result in descending order using `total_purchased` field.
-- Apply the **LIMIT** 1 clause to filter and retrieve the highest number of purchased items.
+- Join `sales` and `menu` on `product_id`.
+- Group_by `product_name` and use `len()` to count the number of each product purchased as a column named `total_purchased`.
+- We utilize the `top_k()` function on the `total_purchased` column to get the most purchased item.
 
 #### Answer:
 | product_name | total_purchased | 
@@ -199,7 +218,40 @@ print(df)
 | ramen       | 8 |
 
 
-- Most purchased item on the menu is ramen which is 8 times. Yummy!
+- Most purchased item on the menu is ramen which is 8 times. Yum!
+
+### 📍 What is the most purchased item on the menu and how many times was it purchased total by all customers and by each customer?
+#### Alternatively, I provide an answer for the same question but a little more involved.
+
+````python
+most_purchased_item = (sales
+                       .group_by('product_id')
+                       .len(name='total_purchased')
+                       .top_k(1, by='total_purchased')[0, 'product_id'])
+
+x = (sales.join(menu, on='product_id')
+     .filter(pl.col('product_id') == most_purchased_item)
+     .group_by('customer_id', 'product_name')
+     .len(name='total_purchased')
+     .sort('customer_id'))
+
+y = pl.DataFrame({
+    "customer_id": "All Customers",
+    "product_name": x[0,'product_name'],
+    "total_purchased": x.select(pl.col('total_purchased').sum())
+})
+
+result = pl.concat([x, y])
+print(result )
+````
+
+#### Answer:
+| customer_id | product_name | total_purchased | 
+| ----------- | ----------- | --- |
+| A           | ramen        | 3 |
+| B           | ramen        | 2 |
+| C           | ramen        | 3 |
+| All Customers       | ramen        | 8 |
 
 ***
 
