@@ -382,7 +382,7 @@ display(membership)
 
 #### Steps:
 - Merge the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
-- Calculate the 'member' column - if `order_date` >= `join_date` then 'Y' else 'N'
+- Calculate the `member` column - if `order_date` >= `join_date` then 'Y' else 'N'
 - Finally, select only the columns we want.
  
 #### Answer: 
