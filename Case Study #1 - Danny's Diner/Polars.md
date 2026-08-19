@@ -548,9 +548,36 @@ print(df)
 **Recreate the table with: customer_id, order_date, product_name, price, member (Y/N)**
 
 ```python
+# Eager
 
+member = (sales.join(menu, on='product_id').join(members, on='customer_id', how='left')
+          .select('customer_id', 
+                  'order_date', 
+                  'product_name', 
+                  'price', 
+                  member=pl.when(pl.col('order_date') >= pl.col('join_date')).then(pl.lit('Y')).otherwise(pl.lit('N'))))
+
+print(member)
 ```
- 
+````python
+# Lazy
+
+member = (sales_lazy.join(menu_lazy, on='product_id').join(members_lazy, on='customer_id', how='left')
+          .select('customer_id', 
+                  'order_date', 
+                  'product_name', 
+                  'price', 
+                  member=pl.when(pl.col('order_date') >= pl.col('join_date')).then(pl.lit('Y')).otherwise(pl.lit('N'))))
+
+df = member.collect()
+print(df)
+````
+
+#### Steps:
+- Join the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
+- Calculate the `member` column - if `order_date` >= `join_date` then 'Y' else 'N'
+- Finally, select only the columns we want.
+
 #### Answer: 
 | customer_id | order_date | product_name | price | member |
 | ----------- | ---------- | -------------| ----- | ------ |
