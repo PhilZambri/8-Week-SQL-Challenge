@@ -437,16 +437,39 @@ Before becoming members,
 ### 📌 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier — how many points would each customer have?
 
 ```python
+# Eager
 
+total_points = (sales.join(menu, on='product_id')
+                .select('customer_id', points=pl.when(pl.col('product_id') == 1)
+                                                .then(pl.col('price') * 20)
+                                                .otherwise(pl.col('price') * 10))
+                .group_by('customer_id')
+                .agg(total_points=pl.col('points').sum())
+                .sort('customer_id'))
+
+print(total_points)
+```
+```python
+# Lazy
+
+total_points = (sales_lazy.join(menu_lazy, on='product_id')
+                .select('customer_id', points=pl.when(pl.col('product_id') == 1)
+                                                .then(pl.col('price') * 20)
+                                                .otherwise(pl.col('price') * 10))
+                .group_by('customer_id')
+                .agg(total_points=pl.col('points').sum())
+                .sort('customer_id'))
+
+df = total_points.collect()
+print(df)
 ```
 
 #### Steps:
 Let's break down the question to understand the point calculation for each customer's purchases.
-- Each $1 spent = 10 points. However, `product_id` 1 sushi gets 2x points, so each $1 spent = 20 points.
-- Here's how the calculation is performed using a conditional CASE statement:
-	- If product_id = 1, multiply every $1 by 20 points.
-	- Otherwise, multiply $1 by 10 points.
-- Then, calculate the total points for each customer.
+- Join `sales` and `menu` on `product_id`
+- We utilize `pl.when().then().otherwise()` structure to create the points column based on the product and price.
+  - when `product_id == 1` (sushi) then `price * 20` otherwise `price * 10`.
+- Group_by `customer_id` and sum `points` to get the total points earned by each customer. 
 
 #### Answer:
 | customer_id | total_points | 
@@ -455,9 +478,9 @@ Let's break down the question to understand the point calculation for each custo
 | B           | 940 |
 | C           | 360 |
 
-- Total points for Customer A is $860.
-- Total points for Customer B is $940.
-- Total points for Customer C is $360.
+- Total points for Customer A is 860.
+- Total points for Customer B is 940.
+- Total points for Customer C is 360.
 
 ***
 
