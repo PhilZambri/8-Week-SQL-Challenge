@@ -487,32 +487,57 @@ Let's break down the question to understand the point calculation for each custo
 ### 📌 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?
 
 ```python
+# Eager
 
+condition = (pl.col('product_id') == 1) | ((pl.col('order_date') >= pl.col('join_date')) & (pl.col('order_date') < pl.col('join_date') + pl.duration(days=7)))
+total_points = (sales.join(menu, on='product_id').join(members, on='customer_id')
+                .filter((pl.col('order_date') >= pl.date(2021, 1, 1)) & (pl.col('order_date') < pl.date(2021, 2, 1)))
+                .select('customer_id', points=pl.when(condition )
+                                                .then(pl.col('price') * 20)
+                                                .otherwise(pl.col('price') * 10))
+                .group_by('customer_id')
+                .agg(total_points=pl.col('points').sum())
+                .sort('customer_id'))
+
+print(total_points)
+```
+```python
+# Lazy
+
+condition = (pl.col('product_id') == 1) | ((pl.col('order_date') >= pl.col('join_date')) & (pl.col('order_date') < pl.col('join_date') + pl.duration(days=7)))
+total_points = (sales_lazy.join(menu_lazy, on='product_id').join(members_lazy, on='customer_id')
+                .filter((pl.col('order_date') >= pl.date(2021, 1, 1)) & (pl.col('order_date') < pl.date(2021, 2, 1)))
+                .select('customer_id', points=pl.when(condition )
+                                                .then(pl.col('price') * 20)
+                                                .otherwise(pl.col('price') * 10))
+                .group_by('customer_id')
+                .agg(total_points=pl.col('points').sum())
+                .sort('customer_id'))
+
+df = total_points.collect()
+print(df)
 ```
 
 #### Assumptions:
-- On Day -X to Day 1 (the day a customer becomes a member), each $1 spent earns 10 points. However, for sushi, each $1 spent earns 20 points.
-- From Day 1 to Day 7 (the first week of membership), each $1 spent for any items earns 20 points.
-- From Day 8 to the last day of January 2021, each $1 spent earns 10 points. However, sushi continues to earn double the points at 20 points per $1 spent.
+- each $1 spent equates to 10 points and sushi still has a 2x points multiplier
+- the first week after a customer joins the program (including their join date) they earn 2x points on all items
 
 #### Steps:
-- Create a CTE called `dates_cte`. 
-- In `dates_cte`, calculate the `valid_date` by adding 6 days to the `join_date` and determine the `last_date` of the month by subtracting 1 day from the last day of January 2021.
-- From `dannys_diner.sales` table, join `dates_cte` on `customer_id` column, ensuring that the `order_date` of the sale is after the `join_date` (`dates.join_date <= sales.order_date`) and not later than the `last_date` (`sales.order_date <= dates.last_date`).
-- Then, join `dannys_diner.menu` table based on the `product_id` column.
-- In the outer query, calculate the points by using a `CASE` statement to determine the points based on our assumptions above. 
-    - If the `product_name` is 'sushi', multiply the price by 2 and then by 10. For orders placed between `join_date` and `valid_date`, also multiply the price by 2 and then by 10. 
-    - For all other products, multiply the price by 10.
-- Calculate the sum of points for each customer.
+- Join `sales`, `menu`, and `members`.
+- Filter for the month of January. `order_date` between 2021-1-1 and 2021-2-1.
+- We utilize `pl.when().then().otherwise()` structure to create the points column based on the product, order_date and price.
+  - when `product_id == 1` (sushi), or `order_date` is within 7 days of the `join_date` then `price * 20` otherwise `price * 10`.
+-  Group_by `customer_id` and sum `points` to get the total points earned by each customer.
+
 
 #### Answer:
 | customer_id | total_points | 
 | ----------- | ---------- |
-| A           | 1020 |
-| B           | 320 |
+| A           | 1370 |
+| B           | 820 |
 
-- Total points for Customer A is 1,020.
-- Total points for Customer B is 320.
+- Total points for Customer A is 1,370.
+- Total points for Customer B is 820.
 
 ***
 
