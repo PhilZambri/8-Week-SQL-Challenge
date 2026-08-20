@@ -604,8 +604,44 @@ print(df)
 **Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.**
 
 ```python
+# Eager
 
+condition = pl.col('order_date') >= pl.col('join_date')
+
+member_ranking = (sales.join(menu, on='product_id').join(members, on='customer_id', how='left')
+                  .with_columns(member=pl.when(condition).then(pl.lit('Y')).otherwise(pl.lit('N')))
+                  .select('customer_id', 
+                          'order_date', 
+                          'product_name', 
+                          'price', 
+                          'member',
+                          ranking=pl.when(pl.col('member') == 'N').then(None).otherwise(pl.col('order_date').rank(method='dense').over(partition_by=['customer_id', 'member']))))
+
+print(member_ranking)
 ```
+```python
+# Lazy
+
+condition = pl.col('order_date') >= pl.col('join_date')
+
+member_ranking = (sales_lazy.join(menu_lazy, on='product_id').join(members_lazy, on='customer_id', how='left')
+                  .with_columns(member=pl.when(condition).then(pl.lit('Y')).otherwise(pl.lit('N')))
+                  .select('customer_id', 
+                          'order_date', 
+                          'product_name', 
+                          'price', 
+                          'member',
+                          ranking=pl.when(pl.col('member') == 'N').then(None).otherwise(pl.col('order_date').rank(method='dense').over(partition_by=['customer_id', 'member']))))
+
+df = member_ranking.collect()
+print(df)
+```
+
+#### Steps:
+- Join the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
+- Calculate the `member` column - if `order_date` >= `join_date` then 'Y' else 'N'.
+- Calculate the `ranking` column - if `member` == `'N'` then `None`, otherwise group_by `(customer_id, member)` and get the dense rank on ascending `order_date`.
+- Finally, select only the columns we want.
 
 #### Answer: 
 | customer_id | order_date | product_name | price | member | ranking | 
