@@ -4,7 +4,7 @@
 ## 📚 Table of Contents
 - [Business Task](#business-task)
 - [Entity Relationship Diagram](#entity-relationship-diagram)
-- [Setup for Polars using pl.read_database_uri()](#setup-for-polars-using-plread_database_uri)
+- [Setup for PySpark using Databricks tables](#setup-for-pyspark-using-databricks-tables)
 - [Question and Solution](#question-and-solution)
 
 Please note that all the information regarding the case study has been sourced from the following link: [here](https://8weeksqlchallenge.com/case-study-1/). 
@@ -21,30 +21,27 @@ Danny wants to use the data to answer a few simple questions about his customers
 ![image](https://user-images.githubusercontent.com/81607668/127271130-dca9aedd-4ca9-4ed8-b6ec-1e1920dca4a8.png)
 
 ***
-## Setup for Polars using pl.read_database_uri()
-Using pl.read_database_uri(), we can query the local postgresql database named '8 WeekSQLChallenge', to extract all three tables - sales, menu, and members - 
-from dannys_diner into three Polars Dataframes. We will use these dataframes to answer all of the following case study questions.
+## Setup for PySpark using Databricks tables
+- First we create the directory on `Databricks` using the `catalog.schema.tablename` notation. 
+- `sql_challenge` is the name of the catalog, and `dannys_diner` is the name of the schema.
+- Using the provided scripts, we created the `sales, menu and members` tables within `dannys_diner`.
+- Now that the tables are all setup we create our `SparkSession`.
+- Then we simply use the `spark.read_table()` function using `sql_challenge.dannys_diner.table_name` to read each table into a dataframe.
+- Finally we use `.show()` and `.printSchema` to verify both the data and the datatypes.
 
 ```python
-import polars as pl
+from pyspark.sql import SparkSession
+import pyspark.sql.functions as sf
 
-uri="postgresql://user:pass@localhost:5432/8%20WeekSQLChallenge"
+spark = SparkSession.builder.getOrCreate()
 
-sales = pl.read_database_uri(
-    query="SELECT * FROM dannys_diner.sales", 
-    uri=uri)
+sales = spark.read.table("sql_challenge.dannys_diner.sales")
+menu = spark.read.table("sql_challenge.dannys_diner.menu")
+members = spark.read.table("sql_challenge.dannys_diner.members")
 
-menu = pl.read_database_uri(
-    query="SELECT * FROM dannys_diner.menu", 
-    uri=uri)
-
-members = pl.read_database_uri(
-    query="SELECT * FROM dannys_diner.members", 
-    uri=uri)
-
-sales_lazy = sales.lazy()
-menu_lazy = menu.lazy()
-members_lazy = members.lazy()
+sales.show()    ; sales.printSchema()
+menu.show()     ; menu.printSchema()
+members.show()  ; members.printSchema()
 ```
 
 ***
@@ -54,15 +51,17 @@ members_lazy = members.lazy()
 ### 📌 1. What is the total amount each customer spent at the restaurant?
 
 ````python
-
-````
-````python
-
+total_spent = (sales.join(menu, sales['product_id'] == menu['product_id'])
+                .groupBy('customer_id')
+                .agg(sf.sum('price').alias('total_spent'))
+                .sort('customer_id'))
+                
+total_spent.show()
 ````
 
 #### Steps:
-- Use **JOIN** to merge `sales` and `menu` on `product_id`.
-- Groupby `customer_id` and calculate the `sum` of `price` into a column named `total_spent`.
+- Join `sales` with the `menu` table on `product_id`.
+- GroupBy `customer_id` and calculate the `sum` of `price` into a column named `total_spent`.
 - Finally, we sort by `customer_id`.
 
 #### Answer:
