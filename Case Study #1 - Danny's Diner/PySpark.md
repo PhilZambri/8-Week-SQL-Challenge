@@ -80,15 +80,16 @@ total_spent.show()
 ### 📌 2. How many days has each customer visited the restaurant?
 
 ````python
+days_visited = (sales.groupBy('customer_id')
+                .agg(sf.countDistinct('order_date').alias('days_visited'))
+                .sort('customer_id'))
 
-````
-````python
-
+days_visited.show()
 ````
 
 #### Steps:
 - Group_by `customer_id`.
-- Create the `days_visited` column by using the `n_unique` function on the `order_date` column.
+- Create the `days_visited` column by using the `countDistinct` function on the `order_date` column.
 - Sort by `customer_id`.
 
 #### Answer:
