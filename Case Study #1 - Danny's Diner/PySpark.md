@@ -31,6 +31,7 @@ Danny wants to use the data to answer a few simple questions about his customers
 
 ```python
 from pyspark.sql import SparkSession
+from pyspark.sql.window import Window
 import pyspark.sql.functions as sf
 
 spark = SparkSession.builder.getOrCreate()
@@ -108,15 +109,19 @@ days_visited.show()
 ### 📌 3. What was the first item from the menu purchased by each customer?
 
 ````python
+first_order = (sales.join(menu, sales['product_id'] == menu['product_id'])
+               .withColumn('rank', sf.dense_rank().over(Window.partitionBy('customer_id').orderBy('order_date')))
+               .filter(sf.col('rank') == 1)
+               .select('customer_id', sf.col('product_name').alias('first_order'))
+               .distinct())
 
+first_order.show()
 ````
-````python
 
-````
 #### Steps:
 - Join `sales` and `menu` on `product_id`.
-- In order to respect duplicates(where more than one order took place on the same day) we will utilize the `rank` function.
-- We calculate the `dense rank` on ascending `order_date`, grouped by `customer_id` and save into a new column named `rank`.
+- In order to respect duplicates(where more than one order took place on the same day) we will utilize the `dense_rank` function.
+- We calculate the `dense_rank` on ascending `order_date`, grouped by `customer_id` and save into a new column named `rank`.
 - Then we filter the rows for where `rank = 1` and select just the unique `customer_id` and `product_name` columns.
 
 #### Answer:
