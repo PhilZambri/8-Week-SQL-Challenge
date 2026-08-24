@@ -141,16 +141,18 @@ first_order.show()
 ### 📌 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
 ````python
+most_purchased = (sales.join(menu, sales['product_id'] == menu['product_id'])
+                  .groupBy('product_name')
+                  .agg(sf.count('product_name').alias('total_purchased'))
+                  .sort(sf.desc('total_purchased')))
 
-````
-````python
-
+most_purchased.show(1)
 ````
 
 #### Steps:
 - Join `sales` and `menu` on `product_id`.
-- Group_by `product_name` and use `len()` to count the number of each product purchased as a column named `total_purchased`.
-- We utilize the `top_k()` function on the `total_purchased` column to get the most purchased item.
+- Group_by `product_name` and use `count()` to count the number of each product purchased as a column named `total_purchased`.
+- We sort by descending `total_purchased` and choose the first row. 
 
 #### Answer:
 | product_name | total_purchased | 
@@ -163,8 +165,32 @@ first_order.show()
 ### 📍 What is the most purchased item on the menu and how many times was it purchased total by all customers and by each customer?
 #### Alternatively, I provide an answer for the same question but a little more involved.
 
-````python
+#### Steps:
+- First we obtain the `product_id` of the most purchased item and store into `most_purcahsed_item`.
+- Then we filter for the most purchased item, groupBy `customer_id` and use `count` to get the total ordered for each customer.
+- Finally we create the overall totals row by creating a new Dataframe, and appending to `most_purchased`.
 
+````python
+most_purchased_item = (sales
+                       .groupBy('product_id')
+                       .agg(sf.count('product_id').alias('total_purchased'))
+                       .sort(sf.desc('total_purchased'))
+                       .first()['product_id'])
+
+most_purchased = (sales
+                  .filter(sf.col('product_id') == most_purchased_item)
+                  .join(menu, sales['product_id'] == menu['product_id'])
+                  .groupBy('customer_id', 'product_name')
+                  .agg(sf.count('product_name').alias('total_purchased'))
+                  .sort('customer_id'))
+
+total = spark.createDataFrame([('All Customers', 
+                                most_purchased.first()['product_name'], 
+                                most_purchased.select(sf.sum('total_purchased'))
+                                .collect()[0][0])], 
+                              schema="customer_id string, product_name string, total_purchased long")
+
+most_purchased.union(total).show()
 ````
 
 #### Answer:
