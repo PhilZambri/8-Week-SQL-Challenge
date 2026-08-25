@@ -275,11 +275,17 @@ first_purchase_after_member.show()
 ### 📌 7. Which item was purchased just before the customer became a member?
 
 ````python
+first_purchase_before_member = (
+    sales.join(members, on='customer_id')
+    .filter(sf.col('order_date') < sf.col('join_date'))
+    .withColumn('rank', sf.rank().over(Window.partitionBy('customer_id').orderBy(sf.desc('order_date'))))
+    .filter(sf.col('rank') == 1)
+    .join(menu, on='product_id')
+    .select('customer_id', 'product_name', 'order_date', 'join_date')
+    .sort('customer_id'))
 
+first_purchase_before_member.show()
 ````
-```python
-
-```
 
 #### Steps:
 - Same as the previous question with two small changes.
