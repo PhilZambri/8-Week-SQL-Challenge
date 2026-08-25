@@ -344,7 +344,7 @@ print(df)
 | A           | curry        | 2021-01-07 | 2021-01-07 |
 | B           | sushi        | 2021-01-11 | 2021-01-09 |
 
-- Customer A's first order as a member was ramen.
+- Customer A's first order as a member was curry.
 - Customer B's first order as a member was sushi.
 
 ***
