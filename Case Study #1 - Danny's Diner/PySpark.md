@@ -461,11 +461,18 @@ member.show()
 **Danny also requires further information about the ```ranking``` of customer products, but he purposely does not need the ranking for non-member purchases so he expects null ```ranking``` values for the records when customers are not yet part of the loyalty program.**
 
 ```python
+member = (
+    sales
+    .join(menu, on="product_id")
+    .join(members, on="customer_id", how='left')
+    .withColumn("member", sf.when(sf.col('order_date') >= sf.col('join_date'), 'Y').otherwise('N'))
+    .withColumn('ranking', sf.when(sf.col('member') == 'N', sf.lit(None))
+                .otherwise(sf.rank().over(Window.partitionBy('customer_id', 'member').orderBy(sf.asc('order_date')))))
+    .drop('product_id', 'join_date'))
 
+member.show()
 ```
-```python
 
-```
 
 #### Steps:
 - Join the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
