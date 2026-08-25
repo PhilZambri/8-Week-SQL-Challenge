@@ -372,11 +372,22 @@ Let's break down the question to understand the point calculation for each custo
 ### 📌 10. In the first week after a customer joins the program (including their join date) they earn 2x points on all items, not just sushi — how many points do customer A and B have at the end of January?
 
 ```python
+cond1 = (sf.col("product_name") == "sushi")
+cond2 = ((sf.col('order_date') >= sf.col('join_date')) & (sf.col('order_date') < sf.col('join_date') + sf.expr("INTERVAL 7 days") ))
 
-```
-```python
+member_total_points_january = (
+    sales
+    .filter(sf.month(sf.col("order_date")) == 1)
+    .join(menu, on="product_id")
+    .join(members, on="customer_id")
+    .withColumn("points", sf.when(cond1 | cond2, sf.col("price") * 20).otherwise(sf.col("price") * 10))
+    .groupBy("customer_id")
+    .agg(sf.sum("points").alias("total_points"))
+    .sort("customer_id"))
 
+member_total_points_january.show()
 ```
+
 
 #### Assumptions:
 - each $1 spent equates to 10 points and sushi still has a 2x points multiplier
@@ -385,8 +396,8 @@ Let's break down the question to understand the point calculation for each custo
 #### Steps:
 - Join `sales`, `menu`, and `members`.
 - Filter for the month of January. `order_date` between 2021-1-1 and 2021-2-1.
-- We utilize `pl.when().then().otherwise()` structure to create the points column based on the product, order_date and price.
-  - when `product_id == 1` (sushi), or `order_date` is within 7 days of the `join_date` then `price * 20` otherwise `price * 10`.
+- We utilize `sf.when().otherwise()` structure to create the points column based on the product, order_date and price.
+  - when `product_name == sushi`, or `order_date` is within 7 days of the `join_date` then `price * 20` otherwise `price * 10`.
 -  Group_by `customer_id` and sum `points` to get the total points earned by each customer.
 
 
