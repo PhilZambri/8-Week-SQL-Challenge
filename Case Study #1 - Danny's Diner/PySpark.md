@@ -206,22 +206,28 @@ most_purchased.union(total).show()
 ### 📌 5. Which item was the most popular for each customer?
 
 ````python
+most_purchased = (sales
+                  .join(menu, sales['product_id'] == menu['product_id'])
+                  .groupBy('customer_id', 'product_name')
+                  .agg(sf.count('product_name').alias('total_purchased'))
+                  .withColumn('rank', sf.dense_rank().over(Window.partitionBy('customer_id').orderBy(sf.desc('total_purchased'))))
+                  .filter(sf.col('rank') == 1)
+                  .drop('rank')
+                  .sort('customer_id'))
 
-````
-````python
-
+most_purchased.show()
 ````
 
 *Each user may have more than 1 most ordered item.*
 
 #### Steps:
 - Join `sales` and `menu` on `product_id`.
-- Group_by `(customer_id, product_name)` and use `len()` to count the total orders for each product for each customer.
-- We execute a dense rank on descending `order_count` partitioned by `customer_id` to obtain the `rank` column.
+- Group_by `(customer_id, product_name)` and use `count()` to count the total orders for each product for each customer.
+- We use a dense rank on descending `total_purchased` partitioned by `customer_id` to obtain the `rank` column.
 - Then we filter for where `rank == 1`, select the columns we want and sort by `customer_id`.
 
 #### Answer:
-| customer_id | product_name | order_count |
+| customer_id | product_name | total_purchased |
 | ----------- | ---------- |------------  |
 | A           | ramen        |  3   |
 | B           | sushi        |  2   |
