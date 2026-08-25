@@ -307,17 +307,22 @@ first_purchase_before_member.show()
 ### 📌 8. What is the total items and amount spent for each member before they became a member?
 
 ```python
+totals_before_becoming_member = (
+    sales.join(members, on='customer_id')
+    .filter(sf.col('order_date') < sf.col('join_date'))
+    .join(menu, on='product_id')
+    .groupBy('customer_id')
+    .agg(sf.count('product_name').alias('total_items'), sf.sum('price').alias('total_spent'))
+    .sort('customer_id'))
 
-```
-```python
-
+totals_before_becoming_member.show()
 ```
 
 #### Steps:
 - Join `sales`, `menu`, and `members`.
 - Filter for where `order_date` < `join_date`.
 - Group_by `customer_id`.
-- Calculate the count using `len()` and `total_spent` by getting the sum of `price`.
+- Calculate the `total_items` using `count()` and `total_spent` by getting the sum of `price`.
 
 #### Answer:
 | customer_id | total_items | total_spent |
