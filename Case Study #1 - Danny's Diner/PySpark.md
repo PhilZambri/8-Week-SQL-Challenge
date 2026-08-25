@@ -419,11 +419,16 @@ member_total_points_january.show()
 **Recreate the table with: customer_id, order_date, product_name, price, member (Y/N)**
 
 ```python
+member = (
+    sales
+    .join(menu, on="product_id")
+    .join(members, on="customer_id", how='left')
+    .withColumn("member", sf.when(sf.col('order_date') >= sf.col('join_date'), 'Y').otherwise('N'))
+    .drop('product_id', 'join_date'))
 
+member.show()
 ```
-````python
 
-````
 
 #### Steps:
 - Join the tables `sales`, `menu`, `members`, ensuring we use `how='left'` on members as to not exclude non-members.
