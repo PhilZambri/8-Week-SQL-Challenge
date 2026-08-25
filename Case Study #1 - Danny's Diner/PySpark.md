@@ -52,7 +52,7 @@ members.show()  ; members.printSchema()
 ### 📌 1. What is the total amount each customer spent at the restaurant?
 
 ````python
-total_spent = (sales.join(menu, sales['product_id'] == menu['product_id'])
+total_spent = (sales.join(menu, on='product_id')
                 .groupBy('customer_id')
                 .agg(sf.sum('price').alias('total_spent'))
                 .sort('customer_id'))
@@ -109,7 +109,7 @@ days_visited.show()
 ### 📌 3. What was the first item from the menu purchased by each customer?
 
 ````python
-first_order = (sales.join(menu, sales['product_id'] == menu['product_id'])
+first_order = (sales.join(menu, on='product_id')
                .withColumn('rank', sf.dense_rank().over(Window.partitionBy('customer_id').orderBy('order_date')))
                .filter(sf.col('rank') == 1)
                .select('customer_id', sf.col('product_name').alias('first_order'))
@@ -141,7 +141,7 @@ first_order.show()
 ### 📌 4. What is the most purchased item on the menu and how many times was it purchased by all customers?
 
 ````python
-most_purchased = (sales.join(menu, sales['product_id'] == menu['product_id'])
+most_purchased = (sales.join(menu, on='product_id')
                   .groupBy('product_name')
                   .agg(sf.count('product_name').alias('total_purchased'))
                   .sort(sf.desc('total_purchased')))
@@ -179,15 +179,14 @@ most_purchased_item = (sales
 
 most_purchased = (sales
                   .filter(sf.col('product_id') == most_purchased_item)
-                  .join(menu, sales['product_id'] == menu['product_id'])
+                  .join(menu, on='product_id')
                   .groupBy('customer_id', 'product_name')
                   .agg(sf.count('product_name').alias('total_purchased'))
                   .sort('customer_id'))
 
 total = spark.createDataFrame([('All Customers', 
                                 most_purchased.first()['product_name'], 
-                                most_purchased.select(sf.sum('total_purchased'))
-                                .collect()[0][0])], 
+                                most_purchased.select(sf.sum('total_purchased')).collect()[0][0])], 
                               schema="customer_id string, product_name string, total_purchased long")
 
 most_purchased.union(total).show()
@@ -207,7 +206,7 @@ most_purchased.union(total).show()
 
 ````python
 most_purchased = (sales
-                  .join(menu, sales['product_id'] == menu['product_id'])
+                  .join(menu, on='product_id')
                   .groupBy('customer_id', 'product_name')
                   .agg(sf.count('product_name').alias('total_purchased'))
                   .withColumn('rank', sf.dense_rank().over(Window.partitionBy('customer_id').orderBy(sf.desc('total_purchased'))))
@@ -243,10 +242,16 @@ most_purchased.show()
 ### 📌 6. Which item was purchased first by the customer after they became a member?
 
 ```python
+first_purchase_after_member = (
+    sales.join(members, on='customer_id')
+    .filter(sf.col('order_date') >= sf.col('join_date'))
+    .withColumn('rank', sf.rank().over(Window.partitionBy('customer_id').orderBy(sf.asc('order_date'))))
+    .filter(sf.col('rank') == 1)
+    .join(menu, on='product_id')
+    .select('customer_id', 'product_name', 'order_date', 'join_date')
+    .sort('customer_id'))
 
-```
-```python
-
+first_purchase_after_member.show()
 ```
 
 #### Steps:
@@ -262,7 +267,7 @@ most_purchased.show()
 | A           | curry        | 2021-01-07 | 2021-01-07 |
 | B           | sushi        | 2021-01-11 | 2021-01-09 |
 
-- Customer A's first order as a member was ramen.
+- Customer A's first order as a member was curry.
 - Customer B's first order as a member was sushi.
 
 ***
