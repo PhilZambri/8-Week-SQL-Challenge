@@ -339,17 +339,21 @@ Before becoming members,
 ### 📌 9. If each $1 spent equates to 10 points and sushi has a 2x points multiplier — how many points would each customer have?
 
 ```python
+total_points = (
+    sales.join(menu, on="product_id")
+    .withColumn("points", sf.when(sf.col("product_name") == "sushi", sf.col("price") * 20).otherwise(sf.col("price") * 10))
+    .groupBy("customer_id")
+    .agg(sf.sum("points").alias("total_points"))
+    .sort("customer_id"))
 
-```
-```python
-
+total_points.show()
 ```
 
 #### Steps:
 Let's break down the question to understand the point calculation for each customer's purchases.
 - Join `sales` and `menu` on `product_id`
-- We utilize `pl.when().then().otherwise()` structure to create the points column based on the product and price.
-  - when `product_id == 1` (sushi) then `price * 20` otherwise `price * 10`.
+- We utilize `sf.when().otherwise()` structure to create the points column based on the product and price.
+  - when `product_name == sushi` then `price * 20` otherwise `price * 10`.
 - Group_by `customer_id` and sum `points` to get the total points earned by each customer. 
 
 #### Answer:
