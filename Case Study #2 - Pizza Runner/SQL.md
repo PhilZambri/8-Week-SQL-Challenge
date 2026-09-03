@@ -64,4 +64,18 @@ FROM pizza_runner.customer_orders;
 <img width="376" height="58" alt="image" src="https://github.com/user-attachments/assets/79a1881d-b2a2-4ce1-ada5-72bbe30c7c88" />
 <img width="636" height="393" alt="image" src="https://github.com/user-attachments/assets/776930fc-7fc3-4573-8dfa-56225ef183c3" />
 
+Now we have to decide what we should do with these values. Should we transform them all into nulls? into empty strings? into a particular value like Unknown, None, or 0?
+- since both columns are strings, any of these options will work.
+- I am opting for the `NULL` values option.
+- `NULL` values take minimal to no space, and more importantly `NULL` values have the best query performance.
+- We can always transform the `NULL` values after computations for a cleaner, more user-friendly output display.
+
+Let's proceed with the cleaning process:
+- We will use temporary tables to store the cleaned data.
+- We will utilize `TRIM()`, `replace()`, and `NULLIF()` functions.
+- `TRIM()` will remove any leading and trailing white spaces. (There aren't any in the current data, but could be if data gets added.)
+- We use `replace()` to transform the 4-character strings 'null' with the empty string ''.
+- `NULLIF()` transforms all the empty strings to `NULL` values.
+-   
+
 
