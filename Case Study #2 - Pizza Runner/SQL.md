@@ -114,5 +114,32 @@ FROM pizza_runner.customer_orders_temp;
 <img width="1309" height="364" alt="image" src="https://github.com/user-attachments/assets/bc0e8279-f294-495a-b3ce-0c89dae2f240" />
 <img width="373" height="54" alt="image" src="https://github.com/user-attachments/assets/14dff559-37af-47b0-84fb-a1f92831d039" />
 
+***
 
+### 🔨 Table: runner_orders
+Now, let's take a look at the `runner_orders` column.
+- 
+```SQL
+-- View the data
+SELECT * FROM pizza_runner.runner_orders;
+
+-- Check the data-types
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'runner_orders';
+
+-- Count the non-nulls
+SELECT 
+    COUNT(pickup_time) AS time_count, 
+    COUNT(distance) AS distance_count, 
+    COUNT(duration) AS duration_count, 
+    COUNT(cancellation) AS cancel_count 
+FROM pizza_runner.runner_orders;
+```
+<img width="874" height="286" alt="image" src="https://github.com/user-attachments/assets/af5b6cc4-a142-4eb4-aded-db07a2a112a9" />
+<img width="317" height="185" alt="image" src="https://github.com/user-attachments/assets/3039b5c5-5f92-4d1e-b274-e30c04e7b3f3" />
+<img width="668" height="55" alt="image" src="https://github.com/user-attachments/assets/99473115-55be-42ac-82b3-e345d6eb25b5" />
+
+more speaky here
+- lala
 
