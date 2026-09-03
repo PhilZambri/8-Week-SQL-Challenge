@@ -76,6 +76,43 @@ Let's proceed with the cleaning process:
 - `TRIM()` will remove any leading and trailing white spaces. (There aren't any in the current data, but could be if data gets added.)
 - We use `replace()` to transform the 4-character strings 'null' with the empty string ''.
 - `NULLIF()` transforms all the empty strings to `NULL` values.
--   
+
+As I was working through the questions, I ran into an additional problem that I will address and solve here.
+- There is no way to uniquely identify when a customer orders the exact same pizza more than once in the same order.
+- In our example, we have duplicate rows at row 5 and 6. The customer ordered 2 of the same pizza.
+- Ordering 2 or more of the same pizza is very common, so we don't want to remove duplicates.
+- What we can do is combine them into a `quantity` column. This removes the duplicate rows without losing data.
+- This will allow us to get the full list of topping names for each order without problems in a later question.
+
+```SQL
+CREATE TEMP TABLE customer_orders_temp AS
+WITH customer_orders_cte AS (
+    SELECT 
+        order_id, 
+        customer_id, 
+        pizza_id,
+        NULLIF(replace(TRIM(exclusions), 'null', ''), '') AS exclusions,
+        NULLIF(replace(TRIM(extras), 'null', ''), '') AS extras,
+        order_time
+    FROM pizza_runner.customer_orders
+)
+
+SELECT *, COUNT(*) AS quantity
+FROM customer_orders_cte
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY order_id, pizza_id;
+```
+```SQL
+-- Verify the data
+SELECT *, char_length(exclusions) AS exclusions_length, char_length(extras) AS extras_length
+FROM pizza_runner.customer_orders_temp;
+
+-- Verify the nulls
+SELECT COUNT(exclusions) AS exclusions_count, COUNT(extras) AS extras_count
+FROM pizza_runner.customer_orders_temp;
+```
+<img width="1309" height="364" alt="image" src="https://github.com/user-attachments/assets/bc0e8279-f294-495a-b3ce-0c89dae2f240" />
+<img width="373" height="54" alt="image" src="https://github.com/user-attachments/assets/14dff559-37af-47b0-84fb-a1f92831d039" />
+
 
 
