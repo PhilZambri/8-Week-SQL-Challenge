@@ -25,4 +25,13 @@ Danny started by recruiting “runners” to deliver fresh pizza from Pizza Runn
 
 ![Pizza Runner](https://github.com/katiehuangx/8-Week-SQL-Challenge/assets/81607668/78099a4e-4d0e-421f-a560-b72e4321f530)
 
+*I have loaded all the data for this case study into a local postgresql database.*  
+*All of the data querying and transformations will be through this local database.*
+
 ## 🧼 Data Cleaning & Transformation
+This case study contains 6 tables - `customer_orders`, `pizza_names`, `pizza_recipes`, `pizza_toppings`, `runner_orders`, and `runners`.  
+Before we start answering questions, the two tables `customer_orders` and `runner_orders` contain messy data that we will need to tidy-up.  
+Let's get started!
+
+### 🔨 Table: customer_orders
+Starting with the `customer_orders` table, let's take a look at the data.
