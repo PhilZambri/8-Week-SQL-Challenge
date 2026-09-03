@@ -37,8 +37,8 @@ Let's get started!
 Starting with the `customer_orders` table, let's take a look at the data.
 - All the datatypes look good - no changes needed.
 - Looking at the data, its clear there are various values of null, empty strings, and possibly blank spaces in the `exclusions` and `extras` columns.
-- Viewing the count of each column, we see it counted 14 and 13 rows each. That means it counted all rows except 1. We know that `COUNT(column_name)` skips over `NULL` values, therefore something else is going on here.
-- Next, we get the `char_length` of each column. We notice a character length of 4 for the null values. This means almost all the nulls we see in the data are not real nulls but actually 4-char length strings - 'null'. 
+- We know that `COUNT(column_name)` skips over `NULL` values. Therefore, when we count, we would expect to get less than the 14 total rows in the table. However, we get 14 and 13 rows each, telling us something else is going on here.
+- For further information, we get the `char_length` of each column. We notice a character length of 4 for the null values. This means almost all the nulls we see in the data are not real nulls but actually 4-char length strings - 'null'. 
 
 ```SQL
 -- View the data
