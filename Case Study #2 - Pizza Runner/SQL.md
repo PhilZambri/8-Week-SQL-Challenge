@@ -73,7 +73,7 @@ Now we have to decide what we should do with these values. Should we transform t
 Let's proceed with the cleaning process:
 - We could use temporary tables, normal tables, or materialized views.
 - If this were a production environment, new orders and raw data would be arriving everyday. It would make sense for the cleaned tables to be refreshed every so often - probably daily.
-- Therefore, We will use materialized views to store the cleaned data.
+- Therefore, we will use materialized views to store the cleaned data.
 - We will utilize `TRIM()`, `replace()`, and `NULLIF()` functions.
 - `TRIM()` will remove any leading and trailing white spaces. (There aren't any in the current data, but could be if data gets added.)
 - We use `replace()` to transform the 4-character strings 'null' with the empty string ''.
@@ -89,7 +89,7 @@ As I was working through the questions, I ran into an additional problem that I 
 ```SQL
 -- Cleaned customer_orders table
 
-CREATE TEMP TABLE customer_orders_temp AS
+CREATE MATERIALIZED VIEW pizza_runner.customer_orders_clean_mv AS
 WITH customer_orders_cte AS (
     SELECT 
         order_id, 
@@ -108,14 +108,14 @@ ORDER BY order_id, pizza_id;
 ```
 ```SQL
 -- View and verify the data
-SELECT *, char_length(exclusions) AS exclusions_length, char_length(extras) AS extras_length
-FROM pizza_runner.customer_orders_temp;
+SELECT *, char_length(exclusions) AS exclusions_l, char_length(extras) AS extras_l
+FROM pizza_runner.customer_orders_clean_mv;
 
 -- Verify the nulls
 SELECT COUNT(exclusions) AS exclusions_count, COUNT(extras) AS extras_count
-FROM pizza_runner.customer_orders_temp;
+FROM pizza_runner.customer_orders_clean_mv;
 ```
-<img width="1309" height="364" alt="image" src="https://github.com/user-attachments/assets/bc0e8279-f294-495a-b3ce-0c89dae2f240" />
+<img width="1242" height="363" alt="image" src="https://github.com/user-attachments/assets/5efbe93b-b560-4efc-90f3-4ee4684844ea" />
 <img width="373" height="54" alt="image" src="https://github.com/user-attachments/assets/14dff559-37af-47b0-84fb-a1f92831d039" />
 
 ***
@@ -150,7 +150,7 @@ more speaky here
 ```SQL
 -- Cleaned runner_orders table
 
-CREATE TEMP TABLE runner_orders_temp AS
+CREATE MATERIALIZED VIEW pizza_runner.runner_orders_clean_mv AS
 SELECT 
     order_id,
     runner_id,
@@ -162,12 +162,18 @@ FROM pizza_runner.runner_orders;
 ```
 ```SQL
 -- View the cleaned data
-SELECT * FROM pizza_runner.runner_orders_temp;
+SELECT * FROM pizza_runner.runner_orders_clean_mv;
 
 -- Check the data-types
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'runner_orders_temp';
+SELECT 
+    attname AS column_name, 
+    format_type(atttypid, atttypmod) AS data_type
+FROM pg_attribute 
+WHERE 
+    attrelid = 'pizza_runner.runner_orders_clean_mv'::regclass 
+    AND attnum > 0 
+    AND NOT attisdropped
+ORDER BY attnum;
 
 -- Count the non-nulls
 SELECT 
@@ -175,7 +181,7 @@ SELECT
     COUNT("distance(km)") AS distance_count, 
     COUNT("duration(minutes)") AS duration_count, 
     COUNT(cancellation) AS cancel_count 
-FROM pizza_runner.runner_orders_temp;
+FROM pizza_runner.runner_orders_clean_mv;
 ```
 <img width="969" height="285" alt="image" src="https://github.com/user-attachments/assets/9c9d6c4e-ef60-41e2-aaf8-d5f2ff41d3ba" />
 <img width="394" height="184" alt="image" src="https://github.com/user-attachments/assets/7341fec2-aea5-42e8-b6ab-cc74b0c35146" />
