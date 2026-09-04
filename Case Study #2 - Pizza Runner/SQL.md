@@ -33,7 +33,7 @@ This case study contains 6 tables - `customer_orders`, `pizza_names`, `pizza_rec
 Before we start answering questions, the two tables `customer_orders` and `runner_orders` contain messy data that we will need to tidy-up.  
 Let's get started!
 
-### 🔨 Table: customer_orders
+## 🔨 Table: customer_orders
 Starting with the `customer_orders` table, let's take a look at the data.
 - All the datatypes look good - no changes needed.
 - Looking at the data, its clear there are various values of null, empty strings, and possibly blank spaces in the `exclusions` and `extras` columns.
@@ -85,6 +85,8 @@ As I was working through the questions, I ran into an additional problem that I 
 - This will allow us to get the full list of topping names for each order without problems in a later question.
 
 ```SQL
+-- Cleaned customer_orders table
+
 CREATE TEMP TABLE customer_orders_temp AS
 WITH customer_orders_cte AS (
     SELECT 
@@ -103,7 +105,7 @@ GROUP BY 1, 2, 3, 4, 5, 6
 ORDER BY order_id, pizza_id;
 ```
 ```SQL
--- Verify the data
+-- View and verify the data
 SELECT *, char_length(exclusions) AS exclusions_length, char_length(extras) AS extras_length
 FROM pizza_runner.customer_orders_temp;
 
@@ -116,9 +118,10 @@ FROM pizza_runner.customer_orders_temp;
 
 ***
 
-### 🔨 Table: runner_orders
-Now, let's take a look at the `runner_orders` column.
-- 
+## 🔨 Table: runner_orders
+Now, let's take a look at the `runner_orders` table.
+- lala
+
 ```SQL
 -- View the data
 SELECT * FROM pizza_runner.runner_orders;
@@ -142,4 +145,40 @@ FROM pizza_runner.runner_orders;
 
 more speaky here
 - lala
+```SQL
+-- Cleaned runner_orders table
+
+CREATE TEMP TABLE runner_orders_temp AS
+SELECT 
+    order_id,
+    runner_id,
+    NULLIF(pickup_time, 'null')::timestamp AS pickup_time,
+    NULLIF(regexp_replace(distance, '[^0-9.]', '', 'g'), '')::FLOAT AS "distance(km)",
+    NULLIF(regexp_replace(duration, '[^0-9]', '', 'g'), '')::INT AS "duration(minutes)",
+    NULLIF(replace(TRIM(cancellation), 'null', ''), '')::VARCHAR(50) AS cancellation
+FROM pizza_runner.runner_orders;
+```
+```SQL
+-- View the cleaned data
+SELECT * FROM pizza_runner.runner_orders_temp;
+
+-- Check the data-types
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'runner_orders_temp';
+
+-- Count the non-nulls
+SELECT 
+    COUNT(pickup_time) AS time_count, 
+    COUNT("distance(km)") AS distance_count, 
+    COUNT("duration(minutes)") AS duration_count, 
+    COUNT(cancellation) AS cancel_count 
+FROM pizza_runner.runner_orders_temp;
+```
+<img width="969" height="285" alt="image" src="https://github.com/user-attachments/assets/9c9d6c4e-ef60-41e2-aaf8-d5f2ff41d3ba" />
+<img width="394" height="184" alt="image" src="https://github.com/user-attachments/assets/7341fec2-aea5-42e8-b6ab-cc74b0c35146" />
+<img width="668" height="54" alt="image" src="https://github.com/user-attachments/assets/2162bd5f-203a-49c1-94c1-bef973a25ec0" />
+
+
+
 
