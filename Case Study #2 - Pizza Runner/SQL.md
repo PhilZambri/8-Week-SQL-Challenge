@@ -71,7 +71,9 @@ Now we have to decide what we should do with these values. Should we transform t
 - We can always transform the `NULL` values after computations for a cleaner, more user-friendly output display.
 
 Let's proceed with the cleaning process:
-- We will use temporary tables to store the cleaned data.
+- We could use temporary tables, normal tables, or materialized views.
+- If this were a production environment, new orders and raw data would be arriving everyday. It would make sense for the cleaned tables to be refreshed every so often - probably daily.
+- Therefore, We will use materialized views to store the cleaned data.
 - We will utilize `TRIM()`, `replace()`, and `NULLIF()` functions.
 - `TRIM()` will remove any leading and trailing white spaces. (There aren't any in the current data, but could be if data gets added.)
 - We use `replace()` to transform the 4-character strings 'null' with the empty string ''.
