@@ -122,7 +122,10 @@ FROM pizza_runner.customer_orders_clean_mv;
 
 ## 📰 Table: runner_orders
 Now, let's take a look at the `runner_orders` table.
-- lala
+- Taking a look at the datatypes, we see that `pickup_time`, `distance`, and `duration` are all strings. This is not what we want.
+	We will need to change them to the correct data-types: `timestamp`, `float`, and `int` respectively.
+- Again, its clear there are some null values, 4-char string 'null's, empty strings and maybe blank spaces.
+- We also have labels in the distance and duration columns that we will have to remove to change the data-types.
 
 ```SQL
 -- View the data
@@ -145,8 +148,13 @@ FROM pizza_runner.runner_orders;
 <img width="317" height="185" alt="image" src="https://github.com/user-attachments/assets/3039b5c5-5f92-4d1e-b274-e30c04e7b3f3" />
 <img width="668" height="55" alt="image" src="https://github.com/user-attachments/assets/99473115-55be-42ac-82b3-e345d6eb25b5" />
 
-more speaky here
-- lala
+Let's proceed with the cleaning process:
+- Again, we are choosing to use a materialized view to hold the cleaned data and choosing to transform values to `NULL`.
+- We utilize `TRIM()`, `replace()`, `regexp_replace()`, and `NULLIF()` functions.
+- `regexp_replace()` uses a regular expression to replace anything but numbers with the empty string ''.
+- After using these functions, we cast each column to the correct datatype.
+- Finally, we rename each column respectively ensuring we add the `km` label to `distance` and the `minutes` label to `duration`.
+
 ```SQL
 -- Cleaned runner_orders table
 
