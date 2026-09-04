@@ -33,7 +33,7 @@ This case study contains 6 tables - `customer_orders`, `pizza_names`, `pizza_rec
 Before we start answering questions, the two tables `customer_orders` and `runner_orders` contain messy data that we will need to tidy-up.  
 Let's get started!
 
-## 🔨 Table: customer_orders
+## 📰 Table: customer_orders
 Starting with the `customer_orders` table, let's take a look at the data.
 - All the datatypes look good - no changes needed.
 - Looking at the data, its clear there are various values of null, empty strings, and possibly blank spaces in the `exclusions` and `extras` columns.
@@ -118,7 +118,7 @@ FROM pizza_runner.customer_orders_temp;
 
 ***
 
-## 🔨 Table: runner_orders
+## 📰 Table: runner_orders
 Now, let's take a look at the `runner_orders` table.
 - lala
 
